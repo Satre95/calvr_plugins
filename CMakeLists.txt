@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.6)
 
 project (CalVR_Plugins)
 
+set(CMAKE_CXX_STANDARD 14) # C++14...
+set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
+set(CMAKE_CXX_EXTENSIONS OFF) #...without compiler extensions like gnu++11
+
 SET(CMAKE_MODULE_PATH "${CalVR_Plugins_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 
 OPTION(PLUGINS_GENERAL "Build General Plugins" ON)
@@ -45,6 +49,7 @@ IF(PLUGINS_GENERAL)
 ENDIF(PLUGINS_GENERAL)
 
 ADD_SUBDIRECTORY(calit2)
+ADD_SUBDIRECTORY(satre)
 
 SET(ADDITIONAL_PLUGIN_FOLDER "" CACHE STRING "Additional plugin folder to build")
 
