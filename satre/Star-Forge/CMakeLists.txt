@@ -3,10 +3,12 @@ set(PLUGIN_HEADERS
 	StarForgePlugin.hpp AttractorVorton.hpp
 	GlobalParameters.hpp math_helper.hpp
 	Planet.hpp RepulsorVorton.hpp
-	Tracer.hpp Vorton.hpp)
+	Tracer.hpp Vorton.hpp
+	SFObject.hpp)
 set(PLUGIN_SOURCES 
 	StarForgePlugin.cpp AttractorVorton.cpp
-	Planet.cpp RepulsorVorton.cpp )
+	Planet.cpp RepulsorVorton.cpp 
+	SFObject.cpp)
 
 add_library(${LIB_NAME} SHARED ${PLUGIN_HEADERS} ${PLUGIN_SOURCES})
 include_directories(${OSG_INCLUDE_DIR})
