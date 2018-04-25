@@ -1,11 +1,11 @@
-#include "SFObject.hpp"
+#include "UniverseObject.hpp"
 
 #include <cvrKernel/NodeMask.h>
 #include <cvrKernel/Navigation.h>
 
 using namespace cvr;
 
-SFObject::SFObject(std::string name, bool navigation, bool movable, bool clip, bool contextMenu, bool showBounds) : SceneObject(name,navigation,movable,clip,contextMenu,showBounds) {
+UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, bool clip, bool contextMenu, bool showBounds) : SceneObject(name,navigation,movable,clip,contextMenu,showBounds) {
 	setBoundsCalcMode(MANUAL);
 	setBoundingBox(osg::BoundingBox(osg::Vec3(-100000,-100000,-100000),osg::Vec3(100000,100000,100000)));
 
@@ -17,7 +17,7 @@ SFObject::SFObject(std::string name, bool navigation, bool movable, bool clip, b
 	}
 }
 
-SFObject::~SFObject()
+UniverseObject::~UniverseObject()
 {
 	if(_resetPositionButton)
 	{
@@ -25,7 +25,7 @@ SFObject::~SFObject()
 	}
 }
 
-void SFObject::menuCallback(MenuItem * item)
+void UniverseObject::menuCallback(MenuItem * item)
 {
 	if(item == _resetPositionButton) {
 		resetPosition();
@@ -35,7 +35,7 @@ void SFObject::menuCallback(MenuItem * item)
 	SceneObject::menuCallback(item);
 }
 
-void SFObject::resetPosition()
+void UniverseObject::resetPosition()
 {
 	setNavigationOn(false);
 	osg::Matrix m, ms, mt;

@@ -4,11 +4,11 @@
 #include <cvrKernel/InteractionEvent.h>
 #include <glm/glm.hpp>
 
-class StarForgePlugin: public cvr::CVRPlugin {
+class StarForge: public cvr::CVRPlugin {
 public:
 
-	StarForgePlugin();
-	~StarForgePlugin();
+	StarForge();
+	~StarForge();
 	
 	virtual bool init() override;
 	virtual void preFrame() override;

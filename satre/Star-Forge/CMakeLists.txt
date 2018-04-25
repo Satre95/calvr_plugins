@@ -1,14 +1,14 @@
 set(LIB_NAME Star-Forge)
 set(PLUGIN_HEADERS 
-	StarForgePlugin.hpp AttractorVorton.hpp
+	StarForge.hpp AttractorVorton.hpp
 	GlobalParameters.hpp math_helper.hpp
 	Planet.hpp RepulsorVorton.hpp
 	Tracer.hpp Vorton.hpp
-	SFObject.hpp)
+	UniverseObject.hpp)
 set(PLUGIN_SOURCES 
-	StarForgePlugin.cpp AttractorVorton.cpp
+	StarForge.cpp AttractorVorton.cpp
 	Planet.cpp RepulsorVorton.cpp 
-	SFObject.cpp)
+	UniverseObject.cpp)
 
 add_library(${LIB_NAME} SHARED ${PLUGIN_HEADERS} ${PLUGIN_SOURCES})
 include_directories(${OSG_INCLUDE_DIR})
