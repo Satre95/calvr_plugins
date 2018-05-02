@@ -2,6 +2,7 @@
 #include <glm/vec3.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/norm.hpp>
+#include <osg/Vec3>
 #include <random>
 #include <ctime>
 #include <cmath>
@@ -145,4 +146,12 @@ inline glm::vec3 ProjectVectorOnPlane(const glm::vec3 & vec, const glm::vec3 & n
 template <class T>
 T MapToRange(const T & val, const T & inputMin, const T & inputMax, const T & outputMin, const T & outputMax) {
     return ((val - inputMin) / (inputMax - inputMin) * (outputMax - outputMin) + outputMin);
+}
+
+inline osg::Vec3 GLM2OSG(const glm::vec3 & vec) {
+	return osg::Vec3(vec.x, vec.y, vec.z);
+}
+
+inline glm::vec3 OSG2GLM(const osg::Vec3 & vec) {
+	return glm::vec3(vec.x(), vec.y(), vec.z());
 }
