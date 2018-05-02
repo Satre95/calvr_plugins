@@ -4,6 +4,7 @@
 
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include <osg/Vec3>
 
 // Default to exponential dropoff.
 const std::function<float(const float &, float)> AttractorVorton::sDefaultDropoffFn = [](const float & maxV, float dist) {
@@ -88,5 +89,7 @@ void AttractorVorton::beginOperate(osgParticle::Program * prog) {
 
 }
 void AttractorVorton::operate(osgParticle::Particle * particle, double dt) {
-
+	osg::Vec3 forceVec = GLM2OSG(ComputeForceVector(OSG2GLM(particle->getPosition())));
+	auto accel = forceVec / particle->getMass();
+	particle->addVelocity(accel * dt);
 }
