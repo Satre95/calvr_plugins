@@ -13,12 +13,18 @@ class AttractorVorton : public Vorton {
 public:
 	AttractorVorton();
 	AttractorVorton(glm::vec3 & pos, float azDelta = glm::radians(90.f), float elevDelta = glm::radians(90.f));
+	AttractorVorton(const AttractorVorton & other, const osg::CopyOp & copyOp = osg::CopyOp::SHALLOW_COPY);
+
+	META_Object(osgParticle, AttractorVorton);
 
 	glm::vec3 ComputeForceVector(const glm::vec3 & pos) const override;
 	void Update(const float timeStep) override;
 	void SetRotationAxis(glm::vec3 axis) { mRotationAxis = axis; }
 	const glm::vec3 & GetRotationAxis() const { return mRotationAxis; }
 	glm::vec3 & GetRotationAxis() { return mRotationAxis; }
+
+	void beginOperate(osgParticle::Program * prog) override;
+	void operate(osgParticle::Particle * particle, double dt) override;
 private:
 	/// The function used to control the vorticity dropoff.
 	/// 1st param is max vorticity.

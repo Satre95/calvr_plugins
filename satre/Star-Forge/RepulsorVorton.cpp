@@ -15,6 +15,10 @@ RepulsorVorton::RepulsorVorton(glm::vec3 & pos, float azDelta, float elevDelta) 
 	Vorton(pos, azDelta, elevDelta), mDropoffFn(sDefaultDropoffFn)
 {}
 
+RepulsorVorton::RepulsorVorton(const RepulsorVorton & other, const osg::CopyOp & copyOp) :
+	Vorton(other, copyOp), mDropoffFn(other.mDropoffFn)
+{}
+
 glm::vec3 RepulsorVorton::ComputeForceVector(const glm::vec3 & samplePoint) const {
 	// The domain of force vectors is the 2D plane tangent to the sample point on the sphere.
 
@@ -54,4 +58,11 @@ glm::vec3 RepulsorVorton::ComputeForceVector(const glm::vec3 & samplePoint) cons
 
 void RepulsorVorton::Update(const float timeStep) {
     
+}
+
+void RepulsorVorton::beginOperate(osgParticle::Program * prog) {
+
+}
+void RepulsorVorton::operate(osgParticle::Particle * particle, double dt) {
+	
 }

@@ -7,14 +7,17 @@
 class RepulsorVorton : public Vorton {
 public:
 	RepulsorVorton();
-
 	RepulsorVorton(glm::vec3 & pos, float azDelta = glm::radians(90.f), float elevDelta = glm::radians(90.f));
+	RepulsorVorton(const RepulsorVorton & other, const osg::CopyOp & copyOp = osg::CopyOp::SHALLOW_COPY);
+	META_Object(osgParticle, RepulsorVorton);
 
 	glm::vec3 ComputeForceVector(const glm::vec3 & pos) const override;
     void Update(const float timeStep) override;
     
 	void SetDropoffFn(std::function<float(const float &, float)> & fn) { mDropoffFn = fn; }
     
+	void beginOperate(osgParticle::Program * prog) override;
+	void operate(osgParticle::Particle * particle, double dt) override;
 private:
 
 	/// The function used to control the vorticity dropoff.

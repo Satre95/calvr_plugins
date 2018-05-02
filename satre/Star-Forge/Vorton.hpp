@@ -1,13 +1,26 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <memory>
+#include <osgParticle/Operator>
+#include <osgParticle/ModularProgram>
+#include <osgParticle/Particle>
+#include <osg/Object>
+#include <osg/Group>
+#include <osg/Geode>
+#include <osg/CopyOp>
 
-class Vorton {
+class Vorton: public osgParticle::Operator {
 public:
-	Vorton() :
+	Vorton() : osgParticle::Operator(),
 		mPosition(0.f, 0.f, 1.f), mVorticity(1.f),
 		mDeltaAzimuth(glm::radians(90.f)),
 		mDeltaElevation(glm::radians(90.f))
+	{}
+
+	Vorton(const Vorton & other, const osg::CopyOp & copyOp = osg::CopyOp::SHALLOW_COPY) :
+		osgParticle::Operator(other, copyOp), 
+		mPosition(other.mPosition), mVorticity(other.mVorticity),
+		mDeltaAzimuth(other.mDeltaAzimuth), mDeltaElevation(other.mDeltaElevation)
 	{}
 
 	Vorton(glm::vec3 & pos, float azDelta = glm::radians(90.f), float elevDelta = glm::radians(90.f)) :
@@ -15,6 +28,11 @@ public:
 		mDeltaAzimuth(azDelta),
 		mDeltaElevation(elevDelta)
 	{}
+
+	void beginOperate(osgParticle::Program * prog) override {}
+	void operate(osgParticle::Particle * particle, double dt) override {}
+
+	META_Object(osgParticle, Vorton);
 
 	virtual ~Vorton() {}
 
@@ -34,7 +52,7 @@ public:
 
 	 \return the force vector, in cartesian coordinates
 	 */
-	virtual glm::vec3 ComputeForceVector(const glm::vec3 & sample) const = 0;
+	virtual glm::vec3 ComputeForceVector(const glm::vec3 & sample) const {}
 
 	/**
 	 \brief Updates the vorton.
@@ -42,7 +60,7 @@ public:
 	 It is up to derived classes to define what updating a vorton means. For example, if vortons move,
 	 than this method would be used to update the position.
 	 */
-	virtual void Update(const float timeStep) = 0;
+	virtual void Update(const float timeStep) {}
 protected:
 	/**
 	 \brief The position of this vorton in cartesian coordinates to the center of the planet.

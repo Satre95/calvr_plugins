@@ -25,7 +25,7 @@ const std::function<glm::vec3(const AttractorVorton &, const glm::vec3 &)> Attra
 	return ejectionVec;
 };
 
-AttractorVorton::AttractorVorton() : Vorton(), mEjectionFn(sDefaultEjectionFn), mDropoffFn(sDefaultDropoffFn), mRadius(0.01f), mAngularSpeed(0.005f)
+AttractorVorton::AttractorVorton() : Vorton(), mDropoffFn(sDefaultDropoffFn), mEjectionFn(sDefaultEjectionFn), mRadius(0.01f), mAngularSpeed(0.005f)
 {
 	// Create a random vector and take it's cross product to get a vec that is
 	// orthogonal to the position vector.
@@ -34,7 +34,7 @@ AttractorVorton::AttractorVorton() : Vorton(), mEjectionFn(sDefaultEjectionFn), 
 }
 
 AttractorVorton::AttractorVorton(glm::vec3 & pos, float azDelta, float elevDelta) :
-	Vorton(pos, azDelta, elevDelta), mEjectionFn(sDefaultEjectionFn), mDropoffFn(sDefaultDropoffFn),
+	Vorton(pos, azDelta, elevDelta), mDropoffFn(sDefaultDropoffFn), mEjectionFn(sDefaultEjectionFn),
 	mRadius(0.01f), mAngularSpeed(0.005f)
 {
 	// Create a random vector and take it's cross product to get a vec that is
@@ -42,6 +42,11 @@ AttractorVorton::AttractorVorton(glm::vec3 & pos, float azDelta, float elevDelta
 	auto randVec = RandomPointOnSphere();
 	mRotationAxis = glm::normalize(glm::cross(randVec, mPosition));
 }
+
+AttractorVorton::AttractorVorton(const AttractorVorton & other,  const osg::CopyOp & copyOp) :
+Vorton(other, copyOp), mDropoffFn(other.mDropoffFn), mEjectionFn(other.mEjectionFn),
+mRadius(other.mRadius), mAngularSpeed(other.mAngularSpeed), mRotationAxis(other.mRotationAxis)
+{}
 
 glm::vec3 AttractorVorton::ComputeForceVector(const glm::vec3 & samplePoint) const {
 	// The domain of force vectors is the 2D plane tangent to the sample point on the sphere.
@@ -77,4 +82,11 @@ glm::vec3 AttractorVorton::ComputeForceVector(const glm::vec3 & samplePoint) con
 
 void AttractorVorton::Update(const float timeStep) {
 	mPosition = glm::rotate(mPosition, mAngularSpeed, mRotationAxis);
+}
+
+void AttractorVorton::beginOperate(osgParticle::Program * prog) {
+
+}
+void AttractorVorton::operate(osgParticle::Particle * particle, double dt) {
+
 }
