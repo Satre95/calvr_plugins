@@ -15,7 +15,7 @@ public:
 	virtual void preFrame() override;
 	virtual void postFrame() override;
 	virtual bool processEvent(cvr::InteractionEvent * event) override;
-	virtual int getPriority() override { return 50; }
+	virtual int getPriority() override { return 60; }
 
 protected:
 	UniverseObject * mUniverse = nullptr;

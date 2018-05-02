@@ -1,4 +1,4 @@
-set(LIB_NAME Star-Forge)
+set(LIB_NAME StarForge)
 set(PLUGIN_HEADERS 
 	StarForge.hpp AttractorVorton.hpp
 	GlobalParameters.hpp math_helper.hpp

@@ -3,6 +3,12 @@
 #include <cvrKernel/NodeMask.h>
 #include <cvrKernel/Navigation.h>
 #include <cvrKernel/PluginHelper.h>
+#include "GlobalParameters.hpp"
+
+namespace params {
+	glm::vec3 gPlanetCenter = glm::vec3(0.f);
+	float gPlanetRadius = 100.f;
+};
 
 using namespace cvr;
 
