@@ -85,9 +85,6 @@ void AttractorVorton::Update(const float timeStep) {
 	mPosition = glm::rotate(mPosition, mAngularSpeed, mRotationAxis);
 }
 
-void AttractorVorton::beginOperate(osgParticle::Program * prog) {
-
-}
 void AttractorVorton::operate(osgParticle::Particle * particle, double dt) {
 	osg::Vec3 forceVec = GLM2OSG(ComputeForceVector(OSG2GLM(particle->getPosition())));
 	auto accel = forceVec / particle->getMass();

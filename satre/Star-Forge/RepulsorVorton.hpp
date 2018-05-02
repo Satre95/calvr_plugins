@@ -16,7 +16,6 @@ public:
     
 	void SetDropoffFn(std::function<float(const float &, float)> & fn) { mDropoffFn = fn; }
     
-	void beginOperate(osgParticle::Program * prog) override;
 	void operate(osgParticle::Particle * particle, double dt) override;
 private:
 

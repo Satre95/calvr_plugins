@@ -60,9 +60,6 @@ void RepulsorVorton::Update(const float timeStep) {
     
 }
 
-void RepulsorVorton::beginOperate(osgParticle::Program * prog) {
-
-}
 void RepulsorVorton::operate(osgParticle::Particle * particle, double dt) {
 	osg::Vec3 forceVec = GLM2OSG(ComputeForceVector(OSG2GLM(particle->getPosition())));
 	auto accel = forceVec / particle->getMass();

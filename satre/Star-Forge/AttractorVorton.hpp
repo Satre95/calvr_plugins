@@ -23,7 +23,6 @@ public:
 	const glm::vec3 & GetRotationAxis() const { return mRotationAxis; }
 	glm::vec3 & GetRotationAxis() { return mRotationAxis; }
 
-	void beginOperate(osgParticle::Program * prog) override;
 	void operate(osgParticle::Particle * particle, double dt) override;
 private:
 	/// The function used to control the vorticity dropoff.
