@@ -22,6 +22,7 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 	osgParticle::Particle pTemplate;
 	pTemplate.setLifeTime(5); // 5 seconds of life.
 	pTemplate.setMass(0.001f); // 1 gram of mass
+	pTemplate.setRadius(1.f);
 	mSystem->setDefaultParticleTemplate(pTemplate);
 
 	// Init the emitter.
@@ -77,5 +78,4 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 }
 
 OSGPlanet::~OSGPlanet() {
-
 }

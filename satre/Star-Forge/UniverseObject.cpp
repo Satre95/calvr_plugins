@@ -2,6 +2,7 @@
 
 #include <cvrKernel/NodeMask.h>
 #include <cvrKernel/Navigation.h>
+#include <cvrKernel/PluginHelper.h>
 
 using namespace cvr;
 
@@ -15,6 +16,13 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
 		_resetPositionButton->setCallback(this);
 		addMenuItem(_resetPositionButton);
 	}
+
+	int numRepulsors = ConfigManager::getInt("value", "Plugin.StarForge.NumRepulsors", 10);
+	int numAttractors = ConfigManager::getInt("value", "Plugin.StarForge.NumAttractors", 10);
+	std::string assetsPath = ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath", "/home/satre/Developer/data/plugins/StarForge");
+	mPlanet = new OSGPlanet(numRepulsors, numAttractors, assetsPath);
+
+	addChild(mPlanet->GetGraph());
 }
 
 UniverseObject::~UniverseObject()
@@ -23,6 +31,8 @@ UniverseObject::~UniverseObject()
 	{
 		delete _resetPositionButton;
 	}
+
+	delete mPlanet;
 }
 
 void UniverseObject::menuCallback(MenuItem * item)

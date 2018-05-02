@@ -2,6 +2,8 @@
 
 #include <cvrKernel/SceneObject.h>
 #include <cvrMenu/MenuButton.h>
+#include <cvrConfig/ConfigManager.h>
+#include "OSGPlanet.hpp"
 
 
 class UniverseObject: public cvr::SceneObject
@@ -16,4 +18,6 @@ public:
 
 protected:
     cvr::MenuButton * _resetPositionButton;
+
+    OSGPlanet * mPlanet;
 };
