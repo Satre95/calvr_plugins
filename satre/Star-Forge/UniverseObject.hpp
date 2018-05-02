@@ -17,7 +17,7 @@ public:
     void resetPosition();
 
 protected:
-    cvr::MenuButton * _resetPositionButton;
+    cvr::MenuButton * mResetPositionButton = nullptr;
 
-    OSGPlanet * mPlanet;
+    OSGPlanet * mPlanet = nullptr;
 };

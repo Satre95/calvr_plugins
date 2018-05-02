@@ -2,7 +2,8 @@
 
 #include <cvrKernel/CVRPlugin.h>
 #include <cvrKernel/InteractionEvent.h>
-#include <glm/glm.hpp>
+
+#include "UniverseObject.hpp"
 
 class StarForge: public cvr::CVRPlugin {
 public:
@@ -15,4 +16,8 @@ public:
 	virtual void postFrame() override;
 	virtual bool processEvent(cvr::InteractionEvent * event) override;
 	virtual int getPriority() override { return 50; }
+
+protected:
+	UniverseObject * mUniverse = nullptr;
+
 };

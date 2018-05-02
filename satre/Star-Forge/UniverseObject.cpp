@@ -10,11 +10,11 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
 	setBoundsCalcMode(MANUAL);
 	setBoundingBox(osg::BoundingBox(osg::Vec3(-100000,-100000,-100000),osg::Vec3(100000,100000,100000)));
 
-	_resetPositionButton = NULL;
+	mResetPositionButton = NULL;
 	if(contextMenu) {
-		_resetPositionButton = new MenuButton("Reset Position");
-		_resetPositionButton->setCallback(this);
-		addMenuItem(_resetPositionButton);
+		mResetPositionButton = new MenuButton("Reset Position");
+		mResetPositionButton->setCallback(this);
+		addMenuItem(mResetPositionButton);
 	}
 
 	int numRepulsors = ConfigManager::getInt("value", "Plugin.StarForge.NumRepulsors", 10);
@@ -27,17 +27,13 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
 
 UniverseObject::~UniverseObject()
 {
-	if(_resetPositionButton)
-	{
-		delete _resetPositionButton;
-	}
-
+	delete mResetPositionButton;
 	delete mPlanet;
 }
 
 void UniverseObject::menuCallback(MenuItem * item)
 {
-	if(item == _resetPositionButton) {
+	if(item == mResetPositionButton) {
 		resetPosition();
 		return;
 	}
