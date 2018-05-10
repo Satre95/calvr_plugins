@@ -52,7 +52,7 @@ public:
 
 	 \return the force vector, in cartesian coordinates
 	 */
-	virtual glm::vec3 ComputeForceVector(const glm::vec3 & sample) const {}
+	virtual glm::vec3 ComputeForceVector(const glm::vec3 & sample) const { return glm::vec3(0.f); }
 
 	/**
 	 \brief Updates the vorton.
