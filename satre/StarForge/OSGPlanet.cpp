@@ -12,8 +12,11 @@
 #include <osgParticle/FluidFrictionOperator>
 #include <cvrConfig/ConfigManager.h>
 
-OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) : mAssetsDir(assetsDir), mRoot(new osg::Group)
+OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) : mAssetsDir(assetsDir),
+																						   mRoot(new osg::Group),
+																						   mScaleNode(new osg::MatrixTransform)
 {
+	mRoot->addChild(mScaleNode);
 
 	/// Init the particle system
 	mSystem = new osgParticle::ParticleSystem;
@@ -49,7 +52,7 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 	emitter->setShooter(shooter);
 
 	// Add the shooter to the scene graph.
-	mRoot->addChild(emitter);
+	mScaleNode->addChild(emitter);
 
 	// Create a program to control the post-spawning behavior of the particles
 	osgParticle::ModularProgram * program = new osgParticle::ModularProgram;
@@ -74,18 +77,18 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 //	program->addOperator(ffop);
 
 	// Add the program to the scene graph
-	mRoot->addChild(program);
+	mScaleNode->addChild(program);
 
 	// Create a drawable target for the partile system
 	auto geode = new osg::Geode;
 	geode->addDrawable(mSystem);
-	mRoot->addChild(geode);
+	mScaleNode->addChild(geode);
 
 	// Create a particle system updater
 	auto psUpdater = new osgParticle::ParticleSystemUpdater;
 	psUpdater->addParticleSystem(mSystem);
 
-	mRoot->addChild(psUpdater);
+	mScaleNode->addChild(psUpdater);
 }
 
 OSGPlanet::~OSGPlanet() {

@@ -5,6 +5,7 @@
 
 #include <osgParticle/ParticleSystem>
 #include <osgParticle/ParticleSystemUpdater>
+#include <osg/MatrixTransform>
 
 /// Wrapper class around an OSG Particle System
 class OSGPlanet
@@ -12,7 +13,7 @@ class OSGPlanet
 public:
 	OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir);
 	~OSGPlanet();
-
+	void SetScale(osg::Matrix & mat) { mScaleNode->setMatrix(mat); }
 	osg::Group * GetGraph() const { return mRoot; }
 
 private:
@@ -20,5 +21,8 @@ private:
 	const std::string mAssetsDir;
 
 	/// The root node of the particle system scene graph
-	osg::Group * mRoot = nullptr;
+	osg::ref_ptr<osg::Group> mRoot = nullptr;
+	osg::ref_ptr<osg::MatrixTransform> mScaleNode = nullptr;
+//	osg::ref_ptr<osg::MatrixTransform> mRotationNode = nullptr;
+//	osg::ref_ptr<osg::MatrixTransform> mTranslationNode = nullptr;
 };

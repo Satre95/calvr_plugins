@@ -23,7 +23,7 @@ bool StarForge::init() {
 	PluginHelper::registerSceneObject(mUniverse, "Star Forge");
     mUniverse->attachToScene();
     mUniverse->setNavigationOn(true);
-    mUniverse->addNavigationMenuItem();
+    mUniverse->setPosition(osg::Vec3(0, 0, 0));
 
     std::cout << "Star Forge Init finished" << std::endl;
 
@@ -31,11 +31,9 @@ bool StarForge::init() {
 }
 
 void StarForge::preFrame() {
-
 }
 
 void StarForge::postFrame() {
-
 }
 
 bool StarForge::processEvent(cvr::InteractionEvent * event) {

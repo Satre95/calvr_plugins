@@ -3,6 +3,7 @@
 #include <cvrKernel/SceneObject.h>
 #include <cvrMenu/MenuButton.h>
 #include <cvrConfig/ConfigManager.h>
+#include <cvrMenu/MenuRangeValue.h>
 #include "OSGPlanet.hpp"
 #include <osg/Uniform>
 #include <osgDB/ReadFile>
@@ -15,12 +16,13 @@ public:
     UniverseObject(std::string name, bool navigation, bool movable, bool clip, bool contextMenu, bool showBounds = false);
 	virtual ~UniverseObject();
 	
-	virtual void menuCallback(cvr::MenuItem * item);
-
-    void resetPosition();
+	virtual void menuCallback(cvr::MenuItem * item) override ;
+    void setScale(float scale);
 
 protected:
-    cvr::MenuButton * mResetPositionButton = nullptr;
+    cvr::MenuRangeValue * mScaleRangeSlider = nullptr;
+
+    float mScale = 1.0f;
 
     OSGPlanet * mPlanet = nullptr;
 };

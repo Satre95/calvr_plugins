@@ -16,12 +16,12 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
 	setBoundsCalcMode(MANUAL);
 	setBoundingBox(osg::BoundingBox(osg::Vec3(-100000,-100000,-100000),osg::Vec3(100000,100000,100000)));
 
-	mResetPositionButton = NULL;
 	if(contextMenu) {
-		mResetPositionButton = new MenuButton("Reset Position");
-		mResetPositionButton->setCallback(this);
-		addMenuItem(mResetPositionButton);
+		mScaleRangeSlider = new MenuRangeValue("Scale", 0.1, 100, 1.0);
+		mScaleRangeSlider->setCallback(this);
+		addMenuItem(mScaleRangeSlider);
 	}
+
 
 	int numRepulsors = ConfigManager::getInt("value", "Plugin.StarForge.NumRepulsors", 10);
 	int numAttractors = ConfigManager::getInt("value", "Plugin.StarForge.NumAttractors", 10);
@@ -44,27 +44,24 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
 
 UniverseObject::~UniverseObject()
 {
-	delete mResetPositionButton;
+	delete mScaleRangeSlider;
 	delete mPlanet;
 }
 
 void UniverseObject::menuCallback(MenuItem * item)
 {
-	if(item == mResetPositionButton) {
-		resetPosition();
-		return;
+    if(item == mScaleRangeSlider) {
+	    setScale(mScaleRangeSlider->getValue());
 	}
 
 	SceneObject::menuCallback(item);
 }
 
-void UniverseObject::resetPosition()
-{
-	setNavigationOn(false);
-	osg::Matrix m, ms, mt;
-	m.makeRotate((90.0/180.0)*M_PI,osg::Vec3(1.0,0,0));
-	ms.makeScale(osg::Vec3(1000.0,1000.0,1000.0));
-	mt.makeTranslate(osg::Vec3(0,0,-Navigation::instance()->getFloorOffset()));
-	setTransform(m*ms*mt);
-	setNavigationOn(true);
+void UniverseObject::setScale(float scale) {
+    mScale = scale;
+    // Set the scale matrix
+    osg::Matrix m;
+    m.makeScale(osg::Vec3(mScale, mScale, mScale));
+    mPlanet->SetScale(m);
+
 }
