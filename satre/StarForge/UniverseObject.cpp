@@ -25,9 +25,20 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
 
 	int numRepulsors = ConfigManager::getInt("value", "Plugin.StarForge.NumRepulsors", 10);
 	int numAttractors = ConfigManager::getInt("value", "Plugin.StarForge.NumAttractors", 10);
+	std::cout << "Num Repulsors: " << numRepulsors << std::endl;
+	std::cout << "Num Attractors: " << numAttractors << std::endl;
+
 	std::string assetsPath = ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath", "/home/satre/Developer/data/plugins/StarForge");
 	mPlanet = new OSGPlanet(numRepulsors, numAttractors, assetsPath);
 
+    /*
+    osg::Program * pgm1 = new osg::Program;
+    pgm1->setName( "StarForgeShader" );
+    std::string shaderPath = ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders");
+    std::cout << shaderPath << std::endl;
+    pgm1->addShader(osg::Shader::readShaderFile(osg::Shader::VERTEX, shaderPath + "starforge.vert"));
+    pgm1->addShader(osg::Shader::readShaderFile(osg::Shader::FRAGMENT, shaderPath + "starforge.frag"));
+    */
 	addChild(mPlanet->GetGraph());
 }
 

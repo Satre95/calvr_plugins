@@ -3,6 +3,7 @@
 #include <cvrConfig/ConfigManager.h>
 #include <cvrKernel/PluginHelper.h>
 
+
 using namespace cvr;
 
 CVRPLUGIN(StarForge)
@@ -15,11 +16,16 @@ StarForge::~StarForge() {
 }
 
 bool StarForge::init() {
-	mUniverse = new UniverseObject("Star Forge", false, false, false, true, false);
 
-	PluginHelper::registerSceneObject(mUniverse);
+	std::cout << "Star Forge Init" << std::endl;
+	mUniverse = new UniverseObject("Star Forge", false, false, false, true, true);
+
+	PluginHelper::registerSceneObject(mUniverse, "Star Forge");
     mUniverse->attachToScene();
-    mUniverse->resetPosition();
+    mUniverse->setNavigationOn(true);
+    mUniverse->addNavigationMenuItem();
+
+    std::cout << "Star Forge Init finished" << std::endl;
 
 	return true;
 }

@@ -10,13 +10,16 @@
 #include <osgParticle/SectorPlacer>
 #include <osgParticle/ModularProgram>
 #include <osgParticle/FluidFrictionOperator>
+#include <cvrConfig/ConfigManager.h>
 
 OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) : mAssetsDir(assetsDir), mRoot(new osg::Group)
 {
 
 	/// Init the particle system
 	mSystem = new osgParticle::ParticleSystem;
-	mSystem->setDefaultAttributesUsingShaders();
+//	mSystem->setDefaultAttributesUsingShaders();
+	std::string assetsPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath", "/home/satre/Assets/StarForge/");
+	mSystem->setDefaultAttributes(assetsPath + "particle.png", false, false);
 
 	// Init a template particle, which all future particles will be copies of.
 	osgParticle::Particle pTemplate;
@@ -66,15 +69,23 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 		program->addOperator(v);
 	}
 
-	osgParticle::FluidFrictionOperator * ffop = new osgParticle::FluidFrictionOperator;
-	ffop->setFluidToAir();
-	program->addOperator(ffop);
+//	osgParticle::FluidFrictionOperator * ffop = new osgParticle::FluidFrictionOperator;
+//	ffop->setFluidToAir();
+//	program->addOperator(ffop);
 
 	// Add the program to the scene graph
 	mRoot->addChild(program);
 
-	// Add the particle system to the scene graph
-	mRoot->addChild(mSystem);
+	// Create a drawable target for the partile system
+	auto geode = new osg::Geode;
+	geode->addDrawable(mSystem);
+	mRoot->addChild(geode);
+
+	// Create a particle system updater
+	auto psUpdater = new osgParticle::ParticleSystemUpdater;
+	psUpdater->addParticleSystem(mSystem);
+
+	mRoot->addChild(psUpdater);
 }
 
 OSGPlanet::~OSGPlanet() {

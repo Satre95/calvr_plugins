@@ -4,6 +4,9 @@
 #include <cvrMenu/MenuButton.h>
 #include <cvrConfig/ConfigManager.h>
 #include "OSGPlanet.hpp"
+#include <osg/Uniform>
+#include <osgDB/ReadFile>
+#include <osgDB/FileUtils>
 
 
 class UniverseObject: public cvr::SceneObject
