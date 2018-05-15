@@ -9,12 +9,12 @@
 #include <osgParticle/RandomRateCounter>
 #include <osgParticle/SectorPlacer>
 #include <osgParticle/ModularProgram>
-#include <osgParticle/FluidFrictionOperator>
 #include <cvrConfig/ConfigManager.h>
 
 OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) : mAssetsDir(assetsDir),
 																						   mRoot(new osg::Group),
-																						   mScaleNode(new osg::MatrixTransform)
+																						   mScaleNode(new osg::MatrixTransform),
+																						   mPlanetDrawProgram(new osg::Program)
 {
 	mRoot->addChild(mScaleNode);
 
@@ -26,10 +26,11 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 
 	// Init a template particle, which all future particles will be copies of.
 	osgParticle::Particle pTemplate;
-	pTemplate.setLifeTime(5); // 5 seconds of life.
+	pTemplate.setLifeTime(200); // 500 seconds of life.
 	pTemplate.setMass(0.001f); // 1 gram of mass
-	pTemplate.setRadius(1.f);
+	pTemplate.setRadius(500.f);
 	mSystem->setDefaultParticleTemplate(pTemplate);
+	//mSystem->getDefaultParticleTemplate().setShape(osgParticle::Particle::LINE);
 
 	// Init the emitter.
 	osgParticle::ModularEmitter * emitter = new osgParticle::ModularEmitter;
@@ -37,7 +38,7 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 
 	// Init the counter for the emitter
 	osgParticle::RandomRateCounter * counter = new osgParticle::RandomRateCounter;
-	counter->setRateRange(60, 60);
+	counter->setRateRange(80, 120);
 	emitter->setCounter(counter);
 
 	// Init the placer for the emitter
@@ -72,15 +73,12 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 		program->addOperator(v);
 	}
 
-//	osgParticle::FluidFrictionOperator * ffop = new osgParticle::FluidFrictionOperator;
-//	ffop->setFluidToAir();
-//	program->addOperator(ffop);
-
 	// Add the program to the scene graph
 	mScaleNode->addChild(program);
 
 	// Create a drawable target for the partile system
 	auto geode = new osg::Geode;
+	geode->setCullingActive(false);
 	geode->addDrawable(mSystem);
 	mScaleNode->addChild(geode);
 

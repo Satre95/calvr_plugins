@@ -3,6 +3,8 @@
 #include <cvrKernel/NodeMask.h>
 #include <cvrKernel/Navigation.h>
 #include <cvrKernel/PluginHelper.h>
+#include <osg/TexGen>
+#include <osg/ShapeDrawable>
 #include "GlobalParameters.hpp"
 
 namespace params {
@@ -28,8 +30,28 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
 	std::cout << "Num Repulsors: " << numRepulsors << std::endl;
 	std::cout << "Num Attractors: " << numAttractors << std::endl;
 
-	std::string assetsPath = ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath", "/home/satre/Developer/data/plugins/StarForge");
+	std::string assetsPath = ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath", "/home/satre/Developer/data/plugins/StarForge/");
 	mPlanet = new OSGPlanet(numRepulsors, numAttractors, assetsPath);
+
+	// Load and create the skybox
+    mSkybox = new SkyBox;
+    mSkybox->getOrCreateStateSet()->setTextureAttributeAndModes(0, new osg::TexGen);
+    std::string skybox = assetsPath + ConfigManager::getEntry("value", "Plugin.StarForge.SkyboxPath", "skyboxes/Belawor/"); // Relative to assets path
+
+    mSkybox->setEnvironmentMap(0,
+                               osgDB::readImageFile(skybox + "Right.TGA"), osgDB::readImageFile(skybox + "Left.TGA"),
+                               osgDB::readImageFile(skybox + "Up.TGA"), osgDB::readImageFile(skybox + "Down.TGA"),
+                               osgDB::readImageFile(skybox + "Front.TGA"), osgDB::readImageFile(skybox + "Back.TGA")
+    );
+
+
+    osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+    auto boundingBox = getOrComputeBoundingBox();
+    geode->addDrawable( new osg::ShapeDrawable(
+            new osg::Sphere(osg::Vec3(), boundingBox.radius())) );
+    geode->setCullingActive( false );
+    mSkybox->addChild(geode);
+
 
     /*
     osg::Program * pgm1 = new osg::Program;
@@ -39,7 +61,10 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
     pgm1->addShader(osg::Shader::readShaderFile(osg::Shader::VERTEX, shaderPath + "starforge.vert"));
     pgm1->addShader(osg::Shader::readShaderFile(osg::Shader::FRAGMENT, shaderPath + "starforge.frag"));
     */
+	addChild(mSkybox);
 	addChild(mPlanet->GetGraph());
+
+	setNavigationOn(true);
 }
 
 UniverseObject::~UniverseObject()

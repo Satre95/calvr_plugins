@@ -25,4 +25,6 @@ private:
 	osg::ref_ptr<osg::MatrixTransform> mScaleNode = nullptr;
 //	osg::ref_ptr<osg::MatrixTransform> mRotationNode = nullptr;
 //	osg::ref_ptr<osg::MatrixTransform> mTranslationNode = nullptr;
+
+    osg::ref_ptr<osg::Program> mPlanetDrawProgram = nullptr;
 };

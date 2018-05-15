@@ -9,6 +9,8 @@
 #include <osgDB/ReadFile>
 #include <osgDB/FileUtils>
 
+#include "SkyBox.hpp"
+
 
 class UniverseObject: public cvr::SceneObject
 {
@@ -24,5 +26,7 @@ protected:
 
     float mScale = 1.0f;
 
+
     OSGPlanet * mPlanet = nullptr;
+    osg::ref_ptr<SkyBox> mSkybox = nullptr;
 };
