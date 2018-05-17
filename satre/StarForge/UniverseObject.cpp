@@ -14,29 +14,33 @@ namespace params {
 
 using namespace cvr;
 
-UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, bool clip, bool contextMenu, bool showBounds) : SceneObject(name,navigation,movable,clip,contextMenu,showBounds) {
-	setBoundsCalcMode(MANUAL);
-	setBoundingBox(osg::BoundingBox(osg::Vec3(-100000,-100000,-100000),osg::Vec3(100000,100000,100000)));
+UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, bool clip, bool contextMenu, bool showBounds) :
+        SceneObject(name,navigation,movable,clip,contextMenu,showBounds)
+{
+    setBoundsCalcMode(MANUAL);
+    setBoundingBox(osg::BoundingBox(osg::Vec3(-1, -1, -1) * params::gPlanetRadius * 200.f, osg::Vec3(1, 1, 1) * params::gPlanetRadius * 200.f));
 
-	if(contextMenu) {
-		mScaleRangeSlider = new MenuRangeValue("Scale", 0.1, 100, 1.0);
-		mScaleRangeSlider->setCallback(this);
-		addMenuItem(mScaleRangeSlider);
-	}
+    if (contextMenu) {
+        mScaleRangeSlider = new MenuRangeValue("Scale", 0.1, 100, 1.0);
+        mScaleRangeSlider->setCallback(this);
+        addMenuItem(mScaleRangeSlider);
+    }
 
 
-	int numRepulsors = ConfigManager::getInt("value", "Plugin.StarForge.NumRepulsors", 10);
-	int numAttractors = ConfigManager::getInt("value", "Plugin.StarForge.NumAttractors", 10);
-	std::cout << "Num Repulsors: " << numRepulsors << std::endl;
-	std::cout << "Num Attractors: " << numAttractors << std::endl;
+    int numRepulsors = ConfigManager::getInt("value", "Plugin.StarForge.NumRepulsors", 10);
+    int numAttractors = ConfigManager::getInt("value", "Plugin.StarForge.NumAttractors", 10);
+    std::cout << "Num Repulsors: " << numRepulsors << std::endl;
+    std::cout << "Num Attractors: " << numAttractors << std::endl;
 
-	std::string assetsPath = ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath", "/home/satre/Developer/data/plugins/StarForge/");
-	mPlanet = new OSGPlanet(numRepulsors, numAttractors, assetsPath);
+    std::string assetsPath = ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath",
+                                                     "/home/satre/Developer/data/plugins/StarForge/");
+    mPlanet = new OSGPlanet(numRepulsors, numAttractors, assetsPath);
 
-	// Load and create the skybox
+    // Load and create the skybox
     mSkybox = new SkyBox;
     mSkybox->getOrCreateStateSet()->setTextureAttributeAndModes(0, new osg::TexGen);
-    std::string skybox = assetsPath + ConfigManager::getEntry("value", "Plugin.StarForge.SkyboxPath", "skyboxes/Belawor/"); // Relative to assets path
+    std::string skybox = assetsPath + ConfigManager::getEntry("value", "Plugin.StarForge.SkyboxPath",
+                                                              "skyboxes/Belawor/"); // Relative to assets path
 
     mSkybox->setEnvironmentMap(0,
                                osgDB::readImageFile(skybox + "Right.TGA"), osgDB::readImageFile(skybox + "Left.TGA"),
@@ -47,9 +51,9 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
 
     osg::ref_ptr<osg::Geode> geode = new osg::Geode;
     auto boundingBox = getOrComputeBoundingBox();
-    geode->addDrawable( new osg::ShapeDrawable(
-            new osg::Sphere(osg::Vec3(), boundingBox.radius())) );
-    geode->setCullingActive( false );
+    geode->addDrawable(new osg::ShapeDrawable(
+            new osg::Sphere(osg::Vec3(), boundingBox.radius())));
+    geode->setCullingActive(false);
     mSkybox->addChild(geode);
 
 
@@ -61,12 +65,9 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
     pgm1->addShader(osg::Shader::readShaderFile(osg::Shader::VERTEX, shaderPath + "starforge.vert"));
     pgm1->addShader(osg::Shader::readShaderFile(osg::Shader::FRAGMENT, shaderPath + "starforge.frag"));
     */
-	addChild(mSkybox);
-	addChild(mPlanet->GetGraph());
-
-	setNavigationOn(true);
+    addChild(mSkybox);
+    addChild(mPlanet->GetGraph());
 }
-
 UniverseObject::~UniverseObject()
 {
 	delete mScaleRangeSlider;

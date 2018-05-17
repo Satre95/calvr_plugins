@@ -5,12 +5,12 @@ set(PLUGIN_HEADERS
 	Planet.hpp RepulsorVorton.hpp
 	Tracer.hpp Vorton.hpp
 	UniverseObject.hpp OSGPlanet.hpp
-	SphereTangentShooter.hpp)
+	SphereTangentShooter.hpp SkyBox.hpp SpherePlacer.hpp)
 set(PLUGIN_SOURCES 
 	StarForge.cpp AttractorVorton.cpp
 	Planet.cpp RepulsorVorton.cpp 
 	UniverseObject.cpp OSGPlanet.cpp
-	SphereTangentShooter.cpp)
+	SphereTangentShooter.cpp SkyBox.cpp)
 
 add_library(${LIB_NAME} SHARED ${PLUGIN_HEADERS} ${PLUGIN_SOURCES})
 include_directories(${OSG_INCLUDE_DIR})

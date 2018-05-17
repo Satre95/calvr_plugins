@@ -23,7 +23,8 @@ bool StarForge::init() {
 	PluginHelper::registerSceneObject(mUniverse, "Star Forge");
     mUniverse->attachToScene();
     mUniverse->setNavigationOn(true);
-    mUniverse->setPosition(osg::Vec3(0, 0, 0));
+    auto pos = ConfigManager::getVec3("x", "y", "z", "Plugin.StarForge.UniversePosition", osg::Vec3(0, -1000, 0));
+    mUniverse->setPosition(pos);
 
     std::cout << "Star Forge Init finished" << std::endl;
 

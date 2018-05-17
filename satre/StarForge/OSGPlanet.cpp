@@ -4,7 +4,11 @@
 #include "AttractorVorton.hpp"
 #include "RepulsorVorton.hpp"
 #include "math_helper.hpp"
+#include "SpherePlacer.hpp"
 
+#include <osg/Geometry>
+#include <osg/Geode>
+#include <osg/Point>
 #include <osgParticle/ModularEmitter>
 #include <osgParticle/RandomRateCounter>
 #include <osgParticle/SectorPlacer>
@@ -22,7 +26,7 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 	mSystem = new osgParticle::ParticleSystem;
 //	mSystem->setDefaultAttributesUsingShaders();
 	std::string assetsPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath", "/home/satre/Assets/StarForge/");
-	mSystem->setDefaultAttributes(assetsPath + "particle.png", false, false);
+	mSystem->setDefaultAttributes(assetsPath + "particle.png", true, false);
 
 	// Init a template particle, which all future particles will be copies of.
 	osgParticle::Particle pTemplate;
@@ -33,23 +37,22 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 	//mSystem->getDefaultParticleTemplate().setShape(osgParticle::Particle::LINE);
 
 	// Init the emitter.
-	osgParticle::ModularEmitter * emitter = new osgParticle::ModularEmitter;
+	auto * emitter = new osgParticle::ModularEmitter;
 	emitter->setParticleSystem(mSystem);
 
 	// Init the counter for the emitter
-	osgParticle::RandomRateCounter * counter = new osgParticle::RandomRateCounter;
+	auto * counter = new osgParticle::RandomRateCounter;
 	counter->setRateRange(80, 120);
 	emitter->setCounter(counter);
 
 	// Init the placer for the emitter
-	osgParticle::SectorPlacer * placer = new osgParticle::SectorPlacer;
-	placer->setCenter(params::gPlanetCenter.x, params::gPlanetCenter.y, params::gPlanetCenter.z);
-	placer->setRadiusRange(params::gPlanetRadius, params::gPlanetRadius);
-	placer->setPhiRange(0, 2.f * osg::PI);
+	osg::Vec3 center = osg::Vec3(params::gPlanetCenter.x, params::gPlanetCenter.y, params::gPlanetCenter.z);
+
+	auto * placer = new SpherePlacer(center, params::gPlanetRadius);
 	emitter->setPlacer(placer);
 
 	// Init the shooter for the emitter
-	SphereTangentShooter * shooter = new SphereTangentShooter;
+	auto * shooter = new SphereTangentShooter;
 	emitter->setShooter(shooter);
 
 	// Add the shooter to the scene graph.
@@ -59,28 +62,48 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 	osgParticle::ModularProgram * program = new osgParticle::ModularProgram;
 	program->setParticleSystem(mSystem);
 
-	for (size_t i = 0; i < numAttractors; ++i) {
-		auto pos = RandomPointOnSphere();
-		AttractorVorton * v = new AttractorVorton(pos);
-		v->SetVorticity(RandomFloat(30.f));
-		program->addOperator(v);
-	}
 
+//	for (size_t i = 0; i < numAttractors; ++i) {
+//		auto pos = RandomPointOnSphere();
+//		AttractorVorton * v = new AttractorVorton(pos);
+//		v->SetVorticity(RandomFloat(30.f));
+//		program->addOperator(v);
+//	}
+
+    auto vortonsVertices = new osg::Vec3Array(numRepulsors);
+    auto vortonsColors = new osg::Vec3Array(numRepulsors);
 	for (size_t i = 0; i < numRepulsors; ++i) {
-		auto pos = RandomPointOnSphere();
+		auto pos = RandomPointOnSphere() * params::gPlanetRadius;
 		RepulsorVorton * v = new RepulsorVorton(pos);	
 		v->SetVorticity(RandomFloat(30.f));
 		program->addOperator(v);
+
+        (*vortonsVertices)[i].set(v->GetPosition().x, v->GetPosition().y, v->GetPosition().z);
+        auto color = glm::normalize(v->GetPosition());
+        (*vortonsColors)[i].set(color.r, color.g, color.b);
 	}
+	auto vortonsGeom = new osg::Geometry;
+	vortonsGeom->setVertexArray(vortonsVertices);
+	vortonsGeom->setColorArray(vortonsColors);
+	vortonsGeom->setColorBinding(osg::Geometry::BIND_OVERALL);
+	vortonsGeom->addPrimitiveSet(new osg::DrawArrays(GL_POINTS, 0, numRepulsors));
+	vortonsGeom->getOrCreateStateSet()->setAttribute(new osg::Point(12.f), osg::StateAttribute::ON);
+    auto vortonsGeode = new osg::Geode;
+    vortonsGeode->addDrawable(vortonsGeom);
+
 
 	// Add the program to the scene graph
 	mScaleNode->addChild(program);
 
-	// Create a drawable target for the partile system
+	// Create a drawable target for the particle system
 	auto geode = new osg::Geode;
 	geode->setCullingActive(false);
 	geode->addDrawable(mSystem);
 	mScaleNode->addChild(geode);
+
+	mScaleNode->addChild(vortonsGeode);
+
+
 
 	// Create a particle system updater
 	auto psUpdater = new osgParticle::ParticleSystemUpdater;
