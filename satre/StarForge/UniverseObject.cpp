@@ -43,9 +43,9 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
                                                               "skyboxes/Belawor/"); // Relative to assets path
 
     mSkybox->setEnvironmentMap(0,
-                               osgDB::readImageFile(skybox + "Right.TGA"), osgDB::readImageFile(skybox + "Left.TGA"),
-                               osgDB::readImageFile(skybox + "Up.TGA"), osgDB::readImageFile(skybox + "Down.TGA"),
-                               osgDB::readImageFile(skybox + "Front.TGA"), osgDB::readImageFile(skybox + "Back.TGA")
+                               osgDB::readImageFile(skybox + "Left.tga"), osgDB::readImageFile(skybox + "Right.tga"),
+                                osgDB::readImageFile(skybox + "Down.tga"), osgDB::readImageFile(skybox + "Up.tga"),
+                               osgDB::readImageFile(skybox + "Front.tga"), osgDB::readImageFile(skybox + "Back.tga")
     );
 
 
