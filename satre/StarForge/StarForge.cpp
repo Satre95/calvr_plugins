@@ -34,9 +34,11 @@ bool StarForge::init() {
 }
 
 void StarForge::preFrame() {
+    mUniverse->PreFrame();
 }
 
 void StarForge::postFrame() {
+    mUniverse->PostFrame();
 }
 
 bool StarForge::processEvent(cvr::InteractionEvent * event) {

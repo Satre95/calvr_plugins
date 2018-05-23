@@ -2,6 +2,7 @@
 
 #include <osgParticle/Placer>
 #include <osgParticle/CenteredPlacer>
+#include "math_helper.hpp"
 
 /// Randomly places a particle on the surface of a sphere specified by the radius.
 class SpherePlacer: public osgParticle::CenteredPlacer {
@@ -31,8 +32,7 @@ SpherePlacer::SpherePlacer(const SpherePlacer &copy, const osg::CopyOp &copyop) 
 {}
 
 void SpherePlacer::place(osgParticle::Particle *P) const {
-    glm::vec3 temp = RandomPointOnSphere() * mRadius;
-    P->setPosition(osg::Vec3(temp.x, temp.y, temp.z));
+    P->setPosition(GLM2OSG(RandomPointOnSphere() * mRadius));
 }
 
 float SpherePlacer::volume() const {

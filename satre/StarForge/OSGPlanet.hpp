@@ -16,6 +16,9 @@ public:
 	void SetScale(osg::Matrix & mat) { mScaleNode->setMatrix(mat); }
 	osg::Group * GetGraph() const { return mRoot; }
 
+	void PreFrame();
+	void PostFrame();
+
 private:
 	osgParticle::ParticleSystem * mSystem = nullptr;
 	const std::string mAssetsDir;
@@ -27,4 +30,7 @@ private:
 //	osg::ref_ptr<osg::MatrixTransform> mTranslationNode = nullptr;
 
     osg::ref_ptr<osg::Program> mPlanetDrawProgram = nullptr;
+
+    osg::ref_ptr<osg::Shader> mVertexShader = nullptr;
+    osg::ref_ptr<osg::Shader> mFragShader = nullptr;
 };

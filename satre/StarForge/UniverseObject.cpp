@@ -5,6 +5,7 @@
 #include <cvrKernel/PluginHelper.h>
 #include <osg/TexGen>
 #include <osg/ShapeDrawable>
+
 #include "GlobalParameters.hpp"
 
 namespace params {
@@ -68,6 +69,7 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
     addChild(mSkybox);
     addChild(mPlanet->GetGraph());
 }
+
 UniverseObject::~UniverseObject()
 {
 	delete mScaleRangeSlider;
@@ -90,4 +92,12 @@ void UniverseObject::setScale(float scale) {
     m.makeScale(osg::Vec3(mScale, mScale, mScale));
     mPlanet->SetScale(m);
 
+}
+
+void UniverseObject::PreFrame() {
+    mPlanet->PreFrame();
+}
+
+void UniverseObject::PostFrame() {
+    mPlanet->PostFrame();
 }

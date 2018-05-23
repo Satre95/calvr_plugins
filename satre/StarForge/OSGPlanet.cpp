@@ -13,7 +13,16 @@
 #include <osgParticle/RandomRateCounter>
 #include <osgParticle/SectorPlacer>
 #include <osgParticle/ModularProgram>
+#include <osgDB/FileUtils>
+#include <osg/Program>
+#include <osg/BlendFunc>
+#include <osg/Depth>
+#include <osg/Matrix>
+
 #include <cvrConfig/ConfigManager.h>
+#include <cvrKernel/PluginHelper.h>
+#include <cvrKernel/CVRViewer.h>
+
 
 OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) : mAssetsDir(assetsDir),
 																						   mRoot(new osg::Group),
@@ -26,7 +35,8 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 	mSystem = new osgParticle::ParticleSystem;
 //	mSystem->setDefaultAttributesUsingShaders();
 	std::string assetsPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath", "/home/satre/Assets/StarForge/");
-	mSystem->setDefaultAttributes(assetsPath + "particle.png", true, false);
+//	mSystem->setDefaultAttributes(assetsPath + "particle.png", true, false);
+	mSystem->setDefaultAttributesUsingShaders(assetsPath + "particle.png", true, false);
 
 	// Init a template particle, which all future particles will be copies of.
 	osgParticle::Particle pTemplate;
@@ -103,14 +113,62 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 
 	mScaleNode->addChild(vortonsGeode);
 
-
-
 	// Create a particle system updater
 	auto psUpdater = new osgParticle::ParticleSystemUpdater;
 	psUpdater->addParticleSystem(mSystem);
 
 	mScaleNode->addChild(psUpdater);
+
+    // Load the shaders
+    auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
+    mVertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge.vert"));
+    mFragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "starforge.frag"));
+
+    if(mVertexShader != nullptr) {
+        std::cout << "Loaded vertex shader." << std::endl;
+    }
+    if(mFragShader != nullptr) {
+        std::cout << "Loaded fragment shader." << std::endl;
+    }
+
+    // Setup the drawing
+    auto stateset = mSystem->getOrCreateStateSet();
+    auto drawProgram = new osg::Program;
+    drawProgram->addShader(mVertexShader);
+    drawProgram->addShader(mFragShader);
+    stateset->setAttribute(drawProgram);
+    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ModelViewProjectionMatrix"));
+    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ModelViewMatrix"));
+    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ViewMatrixInverse"));
+    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_NormalMatrix"));
+    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ViewMatrix"));
+
+
+    auto blend = new osg::BlendFunc();
+    blend->setFunction(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA);
+    stateset->setAttributeAndModes(blend, osg::StateAttribute::ON);
+
+    auto depth = new osg::Depth;
+    depth->setWriteMask(true);
+    depth->setFunction(osg::Depth::Function::LESS);
+    stateset->setAttributeAndModes(depth, osg::StateAttribute::ON);
 }
 
 OSGPlanet::~OSGPlanet() {
+}
+
+void OSGPlanet::PreFrame() {
+	auto & objectMatrix = cvr::PluginHelper::getObjectMatrix()
+	auto & viewMat = cvr::CVRViewer::instance()->getCamera()->getViewMatrix();
+	auto & projMat = cvr::CVRViewer::instance()->getCamera()->getProjectionMatrix();
+	auto inverseViewMat = cvr::CVRViewer::instance()->getCamera()->getInverseViewMatrix();
+
+	mSystem->getOrCreateStateSet()->getUniform("osg_ModelMatrix")->set(objectMatrix);
+	mSystem->getOrCreateStateSet()->getUniform("osg_ViewMatrix")->set(viewMat);
+	mSystem->getOrCreateStateSet()->getUniform("osg_ViewMatrixInverse")->set(inverseViewMat);
+	mSystem->getOrCreateStateSet()->getUniform("osg_ProjectionMatrix")->set(projMat);
+}
+
+void OSGPlanet::PostFrame() {
+
 }

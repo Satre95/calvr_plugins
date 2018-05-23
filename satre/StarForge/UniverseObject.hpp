@@ -21,6 +21,9 @@ public:
 	virtual void menuCallback(cvr::MenuItem * item) override ;
     void setScale(float scale);
 
+    void PreFrame();
+    void PostFrame();
+
 protected:
     cvr::MenuRangeValue * mScaleRangeSlider = nullptr;
 
