@@ -33,8 +33,8 @@ private:
 
     osg::ref_ptr<osg::Program> mPlanetDrawProgram = nullptr;
 
-    osg::ref_ptr<osg::Shader> mVertexShader = nullptr;
-    osg::ref_ptr<osg::Shader> mFragShader = nullptr;
+//    osg::ref_ptr<osg::Shader> mVertexShader = nullptr;
+//    osg::ref_ptr<osg::Shader> mFragShader = nullptr;
 
     float mParticleLifeTime = 20;
     int mEstimatedMaxParticles = 0;

@@ -35,13 +35,15 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 																						   mPlanetDrawProgram(new osg::Program)
 {
     InitParticleSystem(numRepulsors, numAttractors, assetsDir);
-    InitPlanetGeometry();
+//    InitPlanetGeometry();
 }
 
 OSGPlanet::~OSGPlanet() {
 }
 
 void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) {
+
+    auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
 
     /// Init the particle system
     mSystem = new osgParticle::ParticleSystem;
@@ -124,6 +126,14 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     auto vortonsGeode = new osg::Geode;
     vortonsGeode->setCullingActive(false);
     vortonsGeode->addDrawable(vortonsGeom);
+    // Create a shader program to render vortons
+    auto drawProgram = new osg::Program;
+    auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "particleDebug.vert"));
+    auto fragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "particleDebug.frag"));
+    drawProgram->addShader(vertexShader);
+    drawProgram->addShader(fragShader);
+    vortonsGeode->getOrCreateStateSet()->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+
     mRoot->addChild(vortonsGeode);
 
     // Add the program to the scene graph
@@ -133,6 +143,10 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     auto geode = new osg::Geode;
     geode->setCullingActive(false);
     geode->addDrawable(mSystem);
+    // Recycle the vortons geode stateset for particle debug draw.
+    geode->setStateSet(vortonsGeode->getOrCreateStateSet());
+
+
     mRoot->addChild(geode);
 
     // Create a particle system updater
@@ -169,7 +183,7 @@ void OSGPlanet::InitPlanetGeometry() {
         posTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
         posTexture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
         posTexture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
-//        posTexture->setInternalFormat(GL_RGBA);
+        posTexture->setInternalFormat(GL_RGBA32F_ARB);
         stateset->setTextureAttributeAndModes(0, posTexture, osg::StateAttribute::ON);
     }
 
@@ -181,48 +195,29 @@ void OSGPlanet::InitPlanetGeometry() {
         velTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
         velTexture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
         velTexture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
-//        velTexture->setInternalFormat(GL_RGBA32F_ARB);
-        velTexture->setInternalFormat(GL_RGBA);
+        velTexture->setInternalFormat(GL_RGBA32F_ARB);
         stateset->setTextureAttributeAndModes(1, velTexture, osg::StateAttribute::ON);
     }
 
     // Load the shaders
     auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
-    mVertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge.vert"));
-    mFragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "starforge.frag"));
+    auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge.vert"));
+    auto fragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "starforge.frag"));
 
-    if(!mVertexShader) {
+    if(!vertexShader) {
         std::cerr << "ERROR: Unable to load vertex shader in " << shadersPath << std::endl;
         return;
     }
-    if(!mFragShader) {
+    if(!fragShader) {
         std::cerr << "ERROR: Unable to load fragment shader in " << shadersPath << std::endl;
         return;
     }
 
     // Setup the programmable pipeline
     auto drawProgram = new osg::Program;
-    drawProgram->addShader(mVertexShader);
-    drawProgram->addShader(mFragShader);
+    drawProgram->addShader(vertexShader);
+    drawProgram->addShader(fragShader);
     stateset->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-
-//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ModelViewProjectionMatrix"));
-//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ModelViewMatrix"));
-//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ViewMatrixInverse"));
-//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_NormalMatrix"));
-//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ViewMatrix"));
-////    stateset->addUniform(new osg::Uniform(osg::Uniform::Type ::FLOAT_MAT4, "osg_ModelMatrix"));
-////    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ProjectionMatrix"));
-//
-//    auto blend = new osg::BlendFunc();
-//    blend->setFunction(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA);
-//    stateset->setAttributeAndModes(blend, osg::StateAttribute::ON);
-//
-//    auto depth = new osg::Depth;
-//    depth->setWriteMask(true);
-//    depth->setFunction(osg::Depth::Function::LESS);
-//    stateset->setAttributeAndModes(depth, osg::StateAttribute::ON);
-
     // Add it to the scene graph
     mRoot->addChild(geode);
 }
