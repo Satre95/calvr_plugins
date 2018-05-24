@@ -5,6 +5,8 @@
 #include <cvrKernel/PluginHelper.h>
 #include <osg/TexGen>
 #include <osg/ShapeDrawable>
+#include <osgUtil/Optimizer>
+
 
 #include "GlobalParameters.hpp"
 
@@ -19,7 +21,7 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
         SceneObject(name,navigation,movable,clip,contextMenu,showBounds)
 {
     setBoundsCalcMode(MANUAL);
-    setBoundingBox(osg::BoundingBox(osg::Vec3(-1, -1, -1) * params::gPlanetRadius * 200.f, osg::Vec3(1, 1, 1) * params::gPlanetRadius * 200.f));
+    setBoundingBox(osg::BoundingBox(osg::Vec3(-1, -1, -1) * params::gPlanetRadius * 400.f, osg::Vec3(1, 1, 1) * params::gPlanetRadius * 200.f));
 
     if (contextMenu) {
         mScaleRangeSlider = new MenuRangeValue("Scale", 0.1, 100, 1.0);
@@ -61,6 +63,9 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
 
     addChild(mSkybox);
     addChild(mPlanet->GetGraph());
+
+    osgUtil::Optimizer optimizer;
+    optimizer.optimize(mPlanet->GetGraph());
 }
 
 UniverseObject::~UniverseObject()
@@ -90,6 +95,7 @@ void UniverseObject::setScale(float scale) {
 
 void UniverseObject::PreFrame() {
     mPlanet->PreFrame();
+//    CVRViewer::instance()->getCamera()->getGraphicsContext()->getState()->setUseModelViewAndProjectionUniforms(true);
 }
 
 void UniverseObject::PostFrame() {

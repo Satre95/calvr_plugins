@@ -32,7 +32,7 @@ SpherePlacer::SpherePlacer(const SpherePlacer &copy, const osg::CopyOp &copyop) 
 {}
 
 void SpherePlacer::place(osgParticle::Particle *P) const {
-    P->setPosition(GLM2OSG(RandomPointOnSphere() * mRadius));
+    P->setPosition(GLM2OSG(RandomPointOnSphere()) * mRadius);
 }
 
 float SpherePlacer::volume() const {

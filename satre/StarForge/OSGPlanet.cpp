@@ -11,14 +11,18 @@
 #include <osg/Geode>
 #include <osg/Point>
 #include <osgParticle/ModularEmitter>
-#include <osgParticle/Counter>
 #include <osgParticle/ConstantRateCounter>
-#include <osgParticle/SectorPlacer>
 #include <osgParticle/ModularProgram>
 #include <osgDB/FileUtils>
 #include <osg/Program>
 #include <osg/io_utils>
 #include <osg/Matrix>
+#include <osg/Shape>
+#include <osg/ShapeDrawable>
+#include <osg/Texture2D>
+#include <osg/BlendFunc>
+#include <osg/Depth>
+#include <osg/GLExtensions>
 
 #include <cvrConfig/ConfigManager.h>
 #include <cvrKernel/PluginHelper.h>
@@ -27,53 +31,17 @@
 int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime);
 
 OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) : mAssetsDir(assetsDir),
-																						   mRoot(new osg::Group),
-																						   mScaleNode(new osg::MatrixTransform),
+																						   mRoot(new osg::MatrixTransform),
 																						   mPlanetDrawProgram(new osg::Program)
 {
     InitParticleSystem(numRepulsors, numAttractors, assetsDir);
-
-    // Load the shaders
-//    auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
-//    mVertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge.vert"));
-//    mFragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "starforge.frag"));
-//
-//    if(mVertexShader != nullptr) {
-//        std::cout << "Loaded vertex shader." << std::endl;
-//    }
-//    if(mFragShader != nullptr) {
-//        std::cout << "Loaded fragment shader." << std::endl;
-//    }
-//
-//    // Setup the drawing
-//    auto stateset = mSystem->getOrCreateStateSet();
-//    auto drawProgram = new osg::Program;
-//    drawProgram->addShader(mVertexShader);
-//    drawProgram->addShader(mFragShader);
-//    stateset->setAttribute(drawProgram);
-////    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ModelViewProjectionMatrix"));
-////    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ModelViewMatrix"));
-//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ViewMatrixInverse"));
-////    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_NormalMatrix"));
-//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ViewMatrix"));
-//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type ::FLOAT_MAT4, "osg_ModelMatrix"));
-//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ProjectionMatrix"));
-
-//    auto blend = new osg::BlendFunc();
-//    blend->setFunction(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA);
-//    stateset->setAttributeAndModes(blend, osg::StateAttribute::ON);
-//
-//    auto depth = new osg::Depth;
-//    depth->setWriteMask(true);
-//    depth->setFunction(osg::Depth::Function::LESS);
-//    stateset->setAttributeAndModes(depth, osg::StateAttribute::ON);
+//    InitPlanetGeometry();
 }
 
 OSGPlanet::~OSGPlanet() {
 }
 
 void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) {
-    mRoot->addChild(mScaleNode);
 
     /// Init the particle system
     mSystem = new osgParticle::ParticleSystem;
@@ -97,12 +65,12 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     auto * counter = new osgParticle::ConstantRateCounter;
     counter->setMinimumNumberOfParticlesToCreate(3);
     counter->setNumberOfParticlesPerSecondToCreate(15);
-    std::cout << "Estimated max number of particles: "
-                 << getestimatedMaxNumberOfParticles(counter, mParticleLifeTime) << std::endl;
+    mEstimatedMaxParticles = getestimatedMaxNumberOfParticles(counter, mParticleLifeTime);
+    std::cout << "Estimated max number of particles: " << mEstimatedMaxParticles << std::endl;
     emitter->setCounter(counter);
 
     // Init the placer for the emitter
-    osg::Vec3 center = osg::Vec3(params::gPlanetCenter.x, params::gPlanetCenter.y, params::gPlanetCenter.z);
+    osg::Vec3 center = GLM2OSG(params::gPlanetCenter);
 
     auto * placer = new SpherePlacer(center, params::gPlanetRadius);
     emitter->setPlacer(placer);
@@ -112,7 +80,7 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     emitter->setShooter(shooter);
 
     // Add the shooter to the scene graph.
-    mScaleNode->addChild(emitter);
+    mRoot->addChild(emitter);
 
     // Create a program to control the post-spawning behavior of the particles
     osgParticle::ModularProgram * program = new osgParticle::ModularProgram;
@@ -125,7 +93,6 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     auto vortonsColors = new osg::Vec4Array;
 	for (size_t i = 0; i < (numAttractors + numRepulsors); i++) {
         auto pos = RandomPointOnSphere() * params::gPlanetRadius;
-        std::cout << "Pos: " << GLM2OSG(pos) << std::endl;
         Vorton * v;
         if(i < numAttractors) {
             v = new AttractorVorton(pos);
@@ -155,23 +122,106 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     vortonsGeom->addPrimitiveSet(new osg::DrawArrays(GL_POINTS, 0, numAttractors + numRepulsors));
     vortonsGeom->getOrCreateStateSet()->setAttribute(new osg::Point(12.f), osg::StateAttribute::ON);
     auto vortonsGeode = new osg::Geode;
+    vortonsGeode->setCullingActive(false);
     vortonsGeode->addDrawable(vortonsGeom);
-    mScaleNode->addChild(vortonsGeode);
+    mRoot->addChild(vortonsGeode);
 
     // Add the program to the scene graph
-    mScaleNode->addChild(program);
+    mRoot->addChild(program);
 
     // Create a drawable target for the particle system
     auto geode = new osg::Geode;
     geode->setCullingActive(false);
     geode->addDrawable(mSystem);
-    mScaleNode->addChild(geode);
+    mRoot->addChild(geode);
 
     // Create a particle system updater
     auto psUpdater = new osgParticle::ParticleSystemUpdater;
     psUpdater->addParticleSystem(mSystem);
 
-    mScaleNode->addChild(psUpdater);
+    mRoot->addChild(psUpdater);
+}
+
+void OSGPlanet::InitPlanetGeometry() {
+    // Create the sphere
+    auto sphereDrawable = new osg::ShapeDrawable(
+            new osg::Sphere(GLM2OSG(params::gPlanetCenter), params::gPlanetRadius));
+    sphereDrawable->setColor(osg::Vec4(0.3f, 0.3f, 0.76f, 0.3f));
+    sphereDrawable->setUseVertexBufferObjects(true);
+    sphereDrawable->setUseVertexArrayObject(true);
+
+    // Create the Geode (Geometry Node)
+    auto geode = new osg::Geode;
+    geode->addDrawable(sphereDrawable);
+
+    // Setup the textures that will hold the particle data
+    auto stateset = geode->getOrCreateStateSet();
+    int texSize = static_cast<int>(std::ceil(std::sqrt(mEstimatedMaxParticles)));
+
+    {
+        auto posTexture = new osg::Texture2D;
+        posTexture->setDataVariance(osg::Object::DYNAMIC);
+        posTexture->setTextureSize(texSize, texSize); // Set to upper bound of square texture
+        posTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
+        posTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
+        posTexture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
+        posTexture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
+//        posTexture->setInternalFormat(GL_RGBA);
+        stateset->setTextureAttributeAndModes(0, posTexture, osg::StateAttribute::ON);
+    }
+
+    {
+        auto velTexture = new osg::Texture2D;
+        velTexture->setDataVariance(osg::Object::DYNAMIC);
+        velTexture->setTextureSize(texSize, texSize); // Set to upper bound of square texture
+        velTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
+        velTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
+        velTexture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
+        velTexture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
+//        velTexture->setInternalFormat(GL_RGBA32F_ARB);
+        velTexture->setInternalFormat(GL_RGBA);
+        stateset->setTextureAttributeAndModes(1, velTexture, osg::StateAttribute::ON);
+    }
+
+    // Load the shaders
+    auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
+    mVertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge.vert"));
+    mFragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "starforge.frag"));
+
+    if(!mVertexShader) {
+        std::cerr << "ERROR: Unable to load vertex shader in " << shadersPath << std::endl;
+        return;
+    }
+    if(!mFragShader) {
+        std::cerr << "ERROR: Unable to load fragment shader in " << shadersPath << std::endl;
+        return;
+    }
+
+    // Setup the programmable pipeline
+    auto drawProgram = new osg::Program;
+    drawProgram->addShader(mVertexShader);
+    drawProgram->addShader(mFragShader);
+    stateset->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+
+//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ModelViewProjectionMatrix"));
+//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ModelViewMatrix"));
+//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ViewMatrixInverse"));
+//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_NormalMatrix"));
+//    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ViewMatrix"));
+////    stateset->addUniform(new osg::Uniform(osg::Uniform::Type ::FLOAT_MAT4, "osg_ModelMatrix"));
+////    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ProjectionMatrix"));
+//
+    auto blend = new osg::BlendFunc();
+    blend->setFunction(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA);
+    stateset->setAttributeAndModes(blend, osg::StateAttribute::ON);
+
+    auto depth = new osg::Depth;
+    depth->setWriteMask(true);
+    depth->setFunction(osg::Depth::Function::LESS);
+    stateset->setAttributeAndModes(depth, osg::StateAttribute::ON);
+
+    // Add it to the scene graph
+    mRoot->addChild(geode);
 }
 
 void OSGPlanet::PreFrame() {
