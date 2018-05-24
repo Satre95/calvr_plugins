@@ -35,7 +35,7 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 																						   mPlanetDrawProgram(new osg::Program)
 {
     InitParticleSystem(numRepulsors, numAttractors, assetsDir);
-//    InitPlanetGeometry();
+    InitPlanetGeometry();
 }
 
 OSGPlanet::~OSGPlanet() {
@@ -146,7 +146,10 @@ void OSGPlanet::InitPlanetGeometry() {
     // Create the sphere
     auto sphereDrawable = new osg::ShapeDrawable(
             new osg::Sphere(GLM2OSG(params::gPlanetCenter), params::gPlanetRadius));
-    sphereDrawable->setColor(osg::Vec4(0.3f, 0.3f, 0.76f, 0.3f));
+
+    auto colorArray = new osg::Vec4Array;
+    colorArray->push_back(osg::Vec4(0.3f, 0.3f, 0.76f, 0.3f));
+    sphereDrawable->setColorArray(colorArray, osg::Array::BIND_OVERALL);
     sphereDrawable->setUseVertexBufferObjects(true);
     sphereDrawable->setUseVertexArrayObject(true);
 
@@ -211,14 +214,14 @@ void OSGPlanet::InitPlanetGeometry() {
 ////    stateset->addUniform(new osg::Uniform(osg::Uniform::Type ::FLOAT_MAT4, "osg_ModelMatrix"));
 ////    stateset->addUniform(new osg::Uniform(osg::Uniform::Type::FLOAT_MAT4, "osg_ProjectionMatrix"));
 //
-    auto blend = new osg::BlendFunc();
-    blend->setFunction(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA);
-    stateset->setAttributeAndModes(blend, osg::StateAttribute::ON);
-
-    auto depth = new osg::Depth;
-    depth->setWriteMask(true);
-    depth->setFunction(osg::Depth::Function::LESS);
-    stateset->setAttributeAndModes(depth, osg::StateAttribute::ON);
+//    auto blend = new osg::BlendFunc();
+//    blend->setFunction(osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA);
+//    stateset->setAttributeAndModes(blend, osg::StateAttribute::ON);
+//
+//    auto depth = new osg::Depth;
+//    depth->setWriteMask(true);
+//    depth->setFunction(osg::Depth::Function::LESS);
+//    stateset->setAttributeAndModes(depth, osg::StateAttribute::ON);
 
     // Add it to the scene graph
     mRoot->addChild(geode);

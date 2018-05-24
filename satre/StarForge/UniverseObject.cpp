@@ -64,6 +64,18 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
     addChild(mSkybox);
     addChild(mPlanet->GetGraph());
 
+    osgViewer::ViewerBase::Contexts contexts;
+    CVRViewer::instance()->getContexts(contexts);
+    std::cerr << "Got " << contexts.size() << " contexts." << std::endl;
+    if(contexts.empty() == false) {
+        auto gl_state = contexts.front()->getState();
+        gl_state->setUseModelViewAndProjectionUniforms(true);
+        std::cerr << "Using MVP Matrices: " << gl_state->getUseModelViewAndProjectionUniforms() << std::endl;
+        gl_state->setUseVertexAttributeAliasing(true);
+        std::cerr << "Using Vertex Attrib Aliasing: " << gl_state->getUseVertexAttributeAliasing() << std::endl;
+
+    }
+
     osgUtil::Optimizer optimizer;
     optimizer.optimize(mPlanet->GetGraph());
 }
