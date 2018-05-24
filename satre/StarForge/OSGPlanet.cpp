@@ -77,15 +77,12 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
 
     /// Init the particle system
     mSystem = new osgParticle::ParticleSystem;
-//	mSystem->setDefaultAttributesUsingShaders();
     std::string assetsPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath", "/home/satre/Assets/StarForge/");
     mSystem->setDefaultAttributes(assetsPath + "particle.png", true, false);
-//	mSystem->setDefaultAttributesUsingShaders(assetsPath + "particle.png", true, false);
 
     // Init a template particle, which all future particles will be copies of.
     osgParticle::Particle pTemplate;
-    pTemplate.setLifeTime(mParticleLifeTime); // 200 seconds of life.
-//    pTemplate.setLifeTime(-1.f); // Particles never die.
+    pTemplate.setLifeTime(mParticleLifeTime);
     pTemplate.setMass(0.001f); // 1 gram of mass
     pTemplate.setRadius(500.f);
     mSystem->setDefaultParticleTemplate(pTemplate);
@@ -178,17 +175,6 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
 }
 
 void OSGPlanet::PreFrame() {
-//	auto & objectMatrix = cvr::PluginHelper::getObjectMatrix();
-//	auto & viewMat = cvr::CVRViewer::instance()->getCamera()->getViewMatrix();
-//	auto & projMat = cvr::CVRViewer::instance()->getCamera()->getProjectionMatrix();
-//	auto inverseViewMat = cvr::CVRViewer::instance()->getCamera()->getInverseViewMatrix();
-//
-//	mSystem->getOrCreateStateSet()->getUniform("osg_ModelMatrix")->set(objectMatrix);
-//	mSystem->getOrCreateStateSet()->getUniform("osg_ViewMatrix")->set(viewMat);
-//	mSystem->getOrCreateStateSet()->getUniform("osg_ViewMatrixInverse")->set(inverseViewMat);
-//	mSystem->getOrCreateStateSet()->getUniform("osg_ProjectionMatrix")->set(projMat);
-//    std::cout << mSystem->numParticles() << std::endl;
-
 }
 
 void OSGPlanet::PostFrame() {
