@@ -17,8 +17,7 @@
 #include <osgParticle/ModularProgram>
 #include <osgDB/FileUtils>
 #include <osg/Program>
-#include <osg/BlendFunc>
-#include <osg/Depth>
+#include <osg/io_utils>
 #include <osg/Matrix>
 
 #include <cvrConfig/ConfigManager.h>
@@ -99,8 +98,8 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
 //    auto * counter = new osgParticle::RandomRateCounter;
 //    counter->setRateRange(80, 120);
     auto * counter = new osgParticle::ConstantRateCounter;
-    counter->setMinimumNumberOfParticlesToCreate(10);
-    counter->setNumberOfParticlesPerSecondToCreate(10);
+    counter->setMinimumNumberOfParticlesToCreate(3);
+    counter->setNumberOfParticlesPerSecondToCreate(15);
     std::cout << "Estimated max number of particles: "
                  << getestimatedMaxNumberOfParticles(counter, mParticleLifeTime) << std::endl;
     emitter->setCounter(counter);
@@ -125,36 +124,42 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     program->addOperator(new PositionCorrectionOperator);
 
 
-//	for (size_t i = 0; i < numAttractors; ++i) {
-//		auto pos = RandomPointOnSphere();
-//		AttractorVorton * v = new AttractorVorton(pos);
-//		v->SetVorticity(RandomFloat(30.f));
-//		program->addOperator(v);
-//	}
-
-    auto vortonsVertices = new osg::Vec3Array(numRepulsors);
-    auto vortonsColors = new osg::Vec3Array(numRepulsors);
-    for (size_t i = 0; i < numRepulsors; ++i) {
+    auto vortonsVertices = new osg::Vec3Array;
+    auto vortonsColors = new osg::Vec4Array;
+	for (size_t i = 0; i < (numAttractors + numRepulsors); i++) {
         auto pos = RandomPointOnSphere() * params::gPlanetRadius;
-        RepulsorVorton * v = new RepulsorVorton(pos);
-        v->SetVorticity(RandomFloat(30.f));
+        std::cout << "Pos: " << GLM2OSG(pos) << std::endl;
+        Vorton * v;
+        if(i < numAttractors) {
+            v = new AttractorVorton(pos);
+        } else {
+            v = new RepulsorVorton(pos);
+        }
+        v->SetVorticity(RandomFloat(10.f));
         program->addOperator(v);
 
-        (*vortonsVertices)[i].set(v->GetPosition().x, v->GetPosition().y, v->GetPosition().z);
-        auto color = glm::normalize(v->GetPosition());
-        (*vortonsColors)[i].set(color.r, color.g, color.b);
-    }
+        vortonsVertices->push_back(GLM2OSG(v->GetPosition()));
+        osg::Vec4 color;
+        if (i < numAttractors) {
+            color = osg::Vec4(0.f, 1.f, 0.f, 1.f);
+        } else {
+            color = osg::Vec4(1.f, 0.f, 0.f, 1.f);
+        }
+        vortonsColors->push_back(color);
 
+    }
+    auto normals = new osg::Vec3Array;
+	normals->push_back(osg::Vec3(0.f, -1.f, 0.f));
 
     auto vortonsGeom = new osg::Geometry;
     vortonsGeom->setVertexArray(vortonsVertices);
-    vortonsGeom->setColorArray(vortonsColors);
-    vortonsGeom->setColorBinding(osg::Geometry::BIND_OVERALL);
-    vortonsGeom->addPrimitiveSet(new osg::DrawArrays(GL_POINTS, 0, numRepulsors));
+    vortonsGeom->setColorArray(vortonsColors, osg::Array::BIND_PER_VERTEX);
+    vortonsGeom->setNormalArray(normals, osg::Array::BIND_OVERALL);
+    vortonsGeom->addPrimitiveSet(new osg::DrawArrays(GL_POINTS, 0, numAttractors + numRepulsors));
     vortonsGeom->getOrCreateStateSet()->setAttribute(new osg::Point(12.f), osg::StateAttribute::ON);
     auto vortonsGeode = new osg::Geode;
     vortonsGeode->addDrawable(vortonsGeom);
-
+    mScaleNode->addChild(vortonsGeode);
 
     // Add the program to the scene graph
     mScaleNode->addChild(program);
@@ -164,8 +169,6 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     geode->setCullingActive(false);
     geode->addDrawable(mSystem);
     mScaleNode->addChild(geode);
-
-    mScaleNode->addChild(vortonsGeode);
 
     // Create a particle system updater
     auto psUpdater = new osgParticle::ParticleSystemUpdater;
