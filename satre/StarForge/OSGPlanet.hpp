@@ -20,6 +20,8 @@ public:
 	void PostFrame();
 
 private:
+    void InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir);
+
 	osgParticle::ParticleSystem * mSystem = nullptr;
 	const std::string mAssetsDir;
 
@@ -33,4 +35,6 @@ private:
 
     osg::ref_ptr<osg::Shader> mVertexShader = nullptr;
     osg::ref_ptr<osg::Shader> mFragShader = nullptr;
+
+    float mParticleLifeTime = 20;
 };

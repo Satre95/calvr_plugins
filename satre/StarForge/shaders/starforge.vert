@@ -13,9 +13,9 @@ layout(location = 2) in vec4 osg_Color;
 //uniform mat3 osg_NormalMatrix;
 //uniform mat4 osg_ViewMatrix; 
 
-uniform osg_ViewMatrix;
-uniform osg_ProjectionMatrix;
-uniform osg_ModelMatrix;
+uniform mat4 osg_ViewMatrix;
+uniform mat4 osg_ProjectionMatrix;
+uniform mat4 osg_ModelMatrix;
 uniform mat4 osg_ViewMatrixInverse;
 
 
@@ -23,7 +23,7 @@ out vec4 FragColor;
 
 void main() {
 	
-	gl_Position = osg_ProjectionMatrix * osg_ViewMatrix * osg_ModelMatrix * osg_Vertex;
+	gl_Position = osg_ProjectionMatrix * osg_ViewMatrix * osg_Vertex;
 	//FragColor = osg_Color;
 	FragColor = vec4(1.f, 0.f, 0.f, 1.f);
 	

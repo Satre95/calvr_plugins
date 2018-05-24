@@ -57,16 +57,7 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
     geode->setCullingActive(false);
     mSkybox->addChild(geode);
 
-
-    /*
-    osg::Program * pgm1 = new osg::Program;
-    pgm1->setName( "StarForgeShader" );
-    std::string shaderPath = ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders");
-    std::cout << shaderPath << std::endl;
-    pgm1->addShader(osg::Shader::readShaderFile(osg::Shader::VERTEX, shaderPath + "starforge.vert"));
-    pgm1->addShader(osg::Shader::readShaderFile(osg::Shader::FRAGMENT, shaderPath + "starforge.frag"));
-    */
-    addChild(mSkybox);
+//    addChild(mSkybox);
     addChild(mPlanet->GetGraph());
 }
 
