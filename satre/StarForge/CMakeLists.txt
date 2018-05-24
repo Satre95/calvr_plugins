@@ -5,7 +5,7 @@ set(PLUGIN_HEADERS
 	Planet.hpp RepulsorVorton.hpp
 	Tracer.hpp Vorton.hpp
 	UniverseObject.hpp OSGPlanet.hpp
-	SphereTangentShooter.hpp SkyBox.hpp SpherePlacer.hpp)
+	SphereTangentShooter.hpp SkyBox.hpp SpherePlacer.hpp PositionCorrectionOperator.hpp)
 set(PLUGIN_SOURCES 
 	StarForge.cpp AttractorVorton.cpp
 	Planet.cpp RepulsorVorton.cpp 

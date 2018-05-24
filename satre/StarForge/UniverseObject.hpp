@@ -8,6 +8,7 @@
 #include <osg/Uniform>
 #include <osgDB/ReadFile>
 #include <osgDB/FileUtils>
+#include <cvrMenu/MenuText.h>
 
 #include "SkyBox.hpp"
 
@@ -26,7 +27,7 @@ public:
 
 protected:
     cvr::MenuRangeValue * mScaleRangeSlider = nullptr;
-
+    cvr::MenuText * mFrameTimeItem = nullptr;
     float mScale = 1.0f;
 
 

@@ -2,7 +2,8 @@
 #include "GlobalParameters.hpp"
 #include <cvrConfig/ConfigManager.h>
 #include <cvrKernel/PluginHelper.h>
-
+#include <osg/Stats>
+#include <sstream>
 
 using namespace cvr;
 

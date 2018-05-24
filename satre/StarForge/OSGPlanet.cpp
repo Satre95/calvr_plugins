@@ -5,6 +5,7 @@
 #include "RepulsorVorton.hpp"
 #include "math_helper.hpp"
 #include "SpherePlacer.hpp"
+#include "PositionCorrectionOperator.hpp"
 
 #include <osg/Geometry>
 #include <osg/Geode>
@@ -98,7 +99,7 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
 //    auto * counter = new osgParticle::RandomRateCounter;
 //    counter->setRateRange(80, 120);
     auto * counter = new osgParticle::ConstantRateCounter;
-    counter->setMinimumNumberOfParticlesToCreate(30);
+    counter->setMinimumNumberOfParticlesToCreate(10);
     counter->setNumberOfParticlesPerSecondToCreate(10);
     std::cout << "Estimated max number of particles: "
                  << getestimatedMaxNumberOfParticles(counter, mParticleLifeTime) << std::endl;
@@ -121,6 +122,8 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     osgParticle::ModularProgram * program = new osgParticle::ModularProgram;
     program->setParticleSystem(mSystem);
 
+    program->addOperator(new PositionCorrectionOperator);
+
 
 //	for (size_t i = 0; i < numAttractors; ++i) {
 //		auto pos = RandomPointOnSphere();
@@ -141,6 +144,8 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
         auto color = glm::normalize(v->GetPosition());
         (*vortonsColors)[i].set(color.r, color.g, color.b);
     }
+
+
     auto vortonsGeom = new osg::Geometry;
     vortonsGeom->setVertexArray(vortonsVertices);
     vortonsGeom->setColorArray(vortonsColors);

@@ -3,6 +3,7 @@
 #include <cvrKernel/CVRPlugin.h>
 #include <cvrKernel/InteractionEvent.h>
 
+
 #include "UniverseObject.hpp"
 
 class StarForge: public cvr::CVRPlugin {
@@ -19,5 +20,4 @@ public:
 
 protected:
 	UniverseObject * mUniverse = nullptr;
-
 };

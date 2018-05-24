@@ -25,6 +25,8 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
         mScaleRangeSlider = new MenuRangeValue("Scale", 0.1, 100, 1.0);
         mScaleRangeSlider->setCallback(this);
         addMenuItem(mScaleRangeSlider);
+        mFrameTimeItem = new cvr::MenuText("Last Frame timing (ms): ");
+        addMenuItem(mFrameTimeItem);
     }
 
 
@@ -65,6 +67,7 @@ UniverseObject::~UniverseObject()
 {
 	delete mScaleRangeSlider;
 	delete mPlanet;
+    delete mFrameTimeItem;
 }
 
 void UniverseObject::menuCallback(MenuItem * item)
@@ -91,4 +94,7 @@ void UniverseObject::PreFrame() {
 
 void UniverseObject::PostFrame() {
     mPlanet->PostFrame();
+    std::stringstream ss;
+    ss << "Last Frame timing: " << PluginHelper::getLastFrameDuration() * 1000.f << " ms";
+    mFrameTimeItem->setText(ss.str());
 }

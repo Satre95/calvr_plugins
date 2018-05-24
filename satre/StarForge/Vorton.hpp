@@ -29,8 +29,8 @@ public:
 		mDeltaElevation(elevDelta)
 	{}
 
-	void beginOperate(osgParticle::Program * prog) override {}
-	void operate(osgParticle::Particle * particle, double dt) override {}
+	virtual void beginOperate(osgParticle::Program * prog) override {}
+	virtual void operate(osgParticle::Particle * particle, double dt) override {}
 
 	META_Object(osgParticle, Vorton);
 
