@@ -59,7 +59,7 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
     geode->setCullingActive(false);
     mSkybox->addChild(geode);
 
-//    addChild(mSkybox);
+    addChild(mSkybox);
     addChild(mPlanet->GetGraph());
 }
 

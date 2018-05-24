@@ -19,7 +19,7 @@ StarForge::~StarForge() {
 bool StarForge::init() {
 
 	std::cout << "Star Forge Init" << std::endl;
-	mUniverse = new UniverseObject("Star Forge", true, false, false, true, true);
+	mUniverse = new UniverseObject("Star Forge", true, true, false, true, true);
 
 	PluginHelper::registerSceneObject(mUniverse, "Star Forge");
     mUniverse->attachToScene();
