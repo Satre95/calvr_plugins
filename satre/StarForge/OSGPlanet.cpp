@@ -25,6 +25,9 @@
 #include <cvrKernel/CVRViewer.h>
 
 //int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime);
+osg::Image * CreateImage(int width, int height, int numComponents);
+osg::Texture2D * CreateTexture(int width, int height, int numComponents);
+void ClearImage(osg::Image * image);
 
 OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) : mAssetsDir(assetsDir),
 																						   mRoot(new osg::MatrixTransform)
@@ -51,31 +54,31 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     pTemplate.setSizeRange(osgParticle::rangef(2.f, 2.f));
     pTemplate.setColorRange(osgParticle::rangev4(osg::Vec4(1.f, 0.5f, 0.3f, 1.f), osg::Vec4(0.5f, 0.7f, 1.0f, 1.f)));
     mSystem->setDefaultParticleTemplate(pTemplate);
-    // Init the emitter.
-    auto * emitter = new osgParticle::ModularEmitter;
-    emitter->setParticleSystem(mSystem);
+    // Init the mParticleEmitter.
+    mParticleEmitter = new osgParticle::ModularEmitter;
+    mParticleEmitter->setParticleSystem(mSystem);
 
-    // Init the counter for the emitter
+    // Init the counter for the mParticleEmitter
 //    auto * counter = new osgParticle::RandomRateCounter;
 //    counter->setRateRange(80, 120);
     auto * counter = new osgParticle::ConstantRateCounter;
     counter->setMinimumNumberOfParticlesToCreate(3);
     counter->setNumberOfParticlesPerSecondToCreate(5);
     std::cerr << "Estimated max number of particles: " << counter->getEstimatedMaxNumOfParticles(pTemplate.getLifeTime()) << std::endl;
-    emitter->setCounter(counter);
+    mParticleEmitter->setCounter(counter);
 
-    // Init the placer for the emitter
+    // Init the placer for the mParticleEmitter
     osg::Vec3 center = GLM2OSG(params::gPlanetCenter);
 
     auto * placer = new SpherePlacer(center, params::gPlanetRadius);
-    emitter->setPlacer(placer);
+    mParticleEmitter->setPlacer(placer);
 
-    // Init the shooter for the emitter
+    // Init the shooter for the mParticleEmitter
     auto * shooter = new SphereTangentShooter;
-    emitter->setShooter(shooter);
+    mParticleEmitter->setShooter(shooter);
 
     // Add the shooter to the scene graph.
-    mRoot->addChild(emitter);
+    mRoot->addChild(mParticleEmitter);
 
     // Create a program to control the post-spawning behavior of the particles
     auto * program = new osgParticle::ModularProgram;
@@ -164,58 +167,23 @@ void OSGPlanet::InitPlanetGeometry() {
 
     // Setup the textures that will hold the particle data
     auto stateset = geode->getOrCreateStateSet();
-    int texSize = int(std::ceil(fsqrtf(mSystem->getEstimatedMaxNumOfParticles())));
+    auto * counter = dynamic_cast<osgParticle::ConstantRateCounter*>( mParticleEmitter->getCounter());
+
+    int texSize = int(std::ceil(fsqrtf(counter->getEstimatedMaxNumOfParticles(mParticleLifeTime)))) + 1; // Err on the side of caution
     std::cerr << "Initializing textures with width " << texSize << std::endl;
 
     {
-        mColorTexture = new osg::Texture2D;
-        mColorTexture->setDataVariance(osg::Object::DYNAMIC);
-        mColorTexture->setTextureSize(texSize, texSize); // Set to upper bound of square texture
-        mColorTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
-        mColorTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
-        mColorTexture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
-        mColorTexture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
-        mColorTexture->setInternalFormat(GL_RGBA32F);
-        stateset->setTextureAttributeAndModes(0, mColorTexture, osg::StateAttribute::ON);
-
-        osg::ref_ptr<osg::Image> image = new osg::Image;
-        image->allocateImage(texSize, texSize, 1, GL_RGBA, GL_FLOAT);
-        auto data = reinterpret_cast<float *>(image->data());
-        // zero fill image
-        for (int y = 0; y < image->t(); ++y) {
-            for (int x = 0; x < image->s(); ++x) {
-                int i = (x * image->t() + y) * 4;
-                data[i] = data[i+1] = data[i+2] = 0.f;
-                data[i+3] = 1.f;
-            }
-        }
-        image->dirty();
+        mColorTexture = CreateTexture(texSize, texSize, 4);
+        auto image = CreateImage(texSize, texSize, 4);
         mColorTexture->setImage(image);
+        stateset->setTextureAttributeAndModes(0, mColorTexture, osg::StateAttribute::ON);
     }
 
     {
-        mAgeTexture = new osg::Texture2D;
-        mAgeTexture->setDataVariance(osg::Object::DYNAMIC);
-        mAgeTexture->setTextureSize(texSize, texSize); // Set to upper bound of square texture
-        mAgeTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
-        mAgeTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
-        mAgeTexture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
-        mAgeTexture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
-        mAgeTexture->setInternalFormat(GL_R32F);
-        stateset->setTextureAttributeAndModes(1, mAgeTexture, osg::StateAttribute::ON);
-
-        osg::ref_ptr<osg::Image> image = new osg::Image;
-        image->allocateImage(texSize, texSize, 1, GL_R, GL_FLOAT);
-        auto data = reinterpret_cast<float *>(image->data());
-        // zero fill image
-        for (int y = 0; y < image->t(); ++y) {
-            for (int x = 0; x < image->s(); ++x) {
-                int i = (x * image->t() + y) * 4;
-                data[i] = 0.f;
-            }
-        }
-        image->dirty();
-        mAgeTexture->setImage(image);
+        mAgeVelocityTexture = CreateTexture(texSize, texSize, 4);
+        auto image = CreateImage(texSize, texSize, 4);
+        mAgeVelocityTexture->setImage(image);
+        stateset->setTextureAttributeAndModes(1, mAgeVelocityTexture, osg::StateAttribute::ON);
     }
 
     // Load the shaders
@@ -243,7 +211,7 @@ void OSGPlanet::InitPlanetGeometry() {
 
 
 void OSGPlanet::PreFrame() {
-//    UpdateColorDataTexture();
+    UpdateColorDataTexture();
 }
 
 void OSGPlanet::PostFrame() {
@@ -251,8 +219,9 @@ void OSGPlanet::PostFrame() {
 }
 
 void OSGPlanet::UpdateColorDataTexture() {
-    unsigned int texWidth = static_cast<unsigned int>(std::ceil(fsqrtf(mSystem->numParticles())));
     auto image = mColorTexture->getImage();
+    auto texWidth = image->s();
+
     if (!image->isDataContiguous()) std::cerr << "Image data is not contiguous!" << std::endl;
     auto data = reinterpret_cast<float *>(image->data());
 
@@ -318,3 +287,61 @@ void OSGPlanet::UpdateColorDataTexture() {
 //    int baseNumPartciles = static_cast<int>(counter->getNumberOfParticlesPerSecondToCreate() * lifetime);
 //    return osg::maximum(minNumParticles, baseNumPartciles);
 //}
+
+osg::Image * CreateImage(int width, int height, int numComponents) {
+    GLenum pixelFormat;
+    switch (numComponents) {
+        case 1: pixelFormat = GL_R; break;
+        case 2: pixelFormat = GL_RG; break;
+        case 3: pixelFormat = GL_RGB; break;
+        default: pixelFormat = GL_RGBA; break;
+    }
+
+    auto image = new osg::Image;
+    image->allocateImage(width, width, 1, pixelFormat, GL_FLOAT);
+    auto data = reinterpret_cast<float *>(image->data());
+    // zero fill image
+    for (int y = 0; y < image->t(); ++y) {
+        for (int x = 0; x < image->s(); ++x) {
+            int i = (x * image->t() + y) * 4;
+            for (int j = 0; j < numComponents; ++j) {
+                data[i + j] = 0.f;
+            }
+        }
+    }
+
+    return image;
+}
+
+osg::Texture2D * CreateTexture(int width, int height, int numComponents) {
+    GLint  internalFormat;
+    switch (numComponents) {
+        case 1: internalFormat = GL_R32F;
+            break;
+
+        case 2: internalFormat = GL_RG32F;
+            break;
+
+        case 3: internalFormat = GL_RGB32F;
+            break;
+
+        default:internalFormat = GL_RGBA32F;
+            break;
+    }
+    auto tex = new osg::Texture2D;
+    tex->setResizeNonPowerOfTwoHint(false);
+    tex->setDataVariance(osg::Object::DYNAMIC);
+    tex->setTextureSize(width, height);
+    tex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
+    tex->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
+    tex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
+    tex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
+    tex->setInternalFormat(internalFormat);
+    tex->setUnRefImageDataAfterApply(false);
+
+    return tex;
+}
+
+void ClearImage(osg::Image * image) {
+
+}

@@ -9,6 +9,7 @@
 #include <osg/Shape>
 #include <osg/ShapeDrawable>
 #include <osg/Texture2D>
+#include <osgParticle/ModularEmitter>
 
 /// Wrapper class around an OSG Particle System
 class OSGPlanet
@@ -31,6 +32,7 @@ private:
     void UpdateColorDataTexture();
 
 	osgParticle::ParticleSystem * mSystem = nullptr;
+	osgParticle::ModularEmitter * mParticleEmitter = nullptr;
 	const std::string mAssetsDir;
 
 	/// The root node of the particle system scene graph
@@ -39,8 +41,10 @@ private:
 //	osg::ref_ptr<osg::MatrixTransform> mTranslationNode = nullptr;
 
 	osg::ref_ptr<osg::ShapeDrawable> mPlanetSphere = nullptr;
-	osg::ref_ptr<osg::Texture2D> mColorTexture = nullptr;
-	osg::ref_ptr<osg::Texture2D> mAgeTexture = nullptr;
+	osg::Texture2D * mColorTexture = nullptr;
+
+	// (x, y, z) = velocity, (w) = age
+	osg::Texture2D * mAgeVelocityTexture = nullptr;
 
     float mParticleLifeTime = 10;
 };
