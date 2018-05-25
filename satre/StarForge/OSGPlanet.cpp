@@ -88,8 +88,8 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     program->addOperator(new PositionCorrectionOperator);
 
 
-    osg::ref_ptr<osg::Vec3Array> vortonsVertices = new osg::Vec3Array;
-    osg::ref_ptr<osg::Vec4Array> vortonsColors = new osg::Vec4Array;
+//    osg::ref_ptr<osg::Vec3Array> vortonsVertices = new osg::Vec3Array;
+//    osg::ref_ptr<osg::Vec4Array> vortonsColors = new osg::Vec4Array;
 	for (size_t i = 0; i < (numAttractors + numRepulsors); i++) {
         auto pos = RandomPointOnSphere() * params::gPlanetRadius;
         Vorton * v;
@@ -101,16 +101,17 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
         v->SetVorticity(RandomFloat(8.f));
         program->addOperator(v);
 
-        vortonsVertices->push_back(GLM2OSG(v->GetPosition()));
-        osg::Vec4 color;
-        if (i < numAttractors) {
-            color = osg::Vec4(0.f, 1.f, 0.f, 1.f);
-        } else {
-            color = osg::Vec4(1.f, 0.f, 0.f, 1.f);
-        }
-        vortonsColors->push_back(color);
+//        vortonsVertices->push_back(GLM2OSG(v->GetPosition()));
+//        osg::Vec4 color;
+//        if (i < numAttractors) {
+//            color = osg::Vec4(0.f, 1.f, 0.f, 1.f);
+//        } else {
+//            color = osg::Vec4(1.f, 0.f, 0.f, 1.f);
+//        }
+//        vortonsColors->push_back(color);
 
     }
+    /*
     auto normals = new osg::Vec3Array;
 	normals->push_back(osg::Vec3(0.f, -1.f, 0.f));
 
@@ -130,9 +131,8 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     drawProgram->addShader(vertexShader);
     drawProgram->addShader(fragShader);
     vortonsGeode->getOrCreateStateSet()->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-
     mRoot->addChild(vortonsGeode);
-
+    */
     // Add the program to the scene graph
     mRoot->addChild(program);
 
@@ -177,14 +177,22 @@ void OSGPlanet::InitPlanetDrawPipeline() {
         mColorTexture = CreateTexture(texSize, texSize, 4);
         auto image = CreateImage(texSize, texSize, 4);
         mColorTexture->setImage(image);
-        stateset->setTextureAttributeAndModes(0, mColorTexture, osg::StateAttribute::ON);
+        stateset->setTextureAttributeAndModes(0, mColorTexture);
     }
 
     {
         mAgeVelocityTexture = CreateTexture(texSize, texSize, 4);
         auto image = CreateImage(texSize, texSize, 4);
         mAgeVelocityTexture->setImage(image);
-        stateset->setTextureAttributeAndModes(1, mAgeVelocityTexture, osg::StateAttribute::ON);
+        stateset->setTextureAttributeAndModes(1, mAgeVelocityTexture);
+    }
+
+    {
+        mPositionTexture = CreateTexture(texSize, texSize, 4);
+        auto image = CreateImage(texSize, texSize, 4);
+        mPositionTexture->setImage(image);
+        stateset->setTextureAttributeAndModes(2, mPositionTexture);
+        std::cerr << "Created Pos Texture" << std::endl;
     }
 
     // Load the shaders
@@ -207,7 +215,7 @@ void OSGPlanet::InitPlanetDrawPipeline() {
     drawProgram->addShader(fragShader);
     stateset->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 
-    auto uMaxParticleAge = new osg::Uniform(osg::Uniform::Type::FLOAT, "maxParticleAge");
+    auto uMaxParticleAge = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_maxParticleAge");
     stateset->addUniform(uMaxParticleAge);
     uMaxParticleAge->set(float(mSystem->getDefaultParticleTemplate().getLifeTime()));
 
@@ -217,13 +225,32 @@ void OSGPlanet::InitPlanetDrawPipeline() {
 
 
 void OSGPlanet::PreFrame() {
-
+    UpdatePositionDataTexture();
     UpdateColorDataTexture();
     UpdateAgeVelDataTexture();
 }
 
 void OSGPlanet::PostFrame() {
 
+}
+
+void OSGPlanet::UpdatePositionDataTexture() {
+    auto image = mPositionTexture->getImage();
+    auto texWidth = image->s();
+    ClearImage(image);
+
+    if (!image->isDataContiguous()) std::cerr << "Image data is not contiguous!" << std::endl;
+    auto data = reinterpret_cast<float *>(image->data());
+
+    // One slot for each particle.
+    int numParticles = mSystem->numParticles();
+    for (int i = 0; i < numParticles; ++i) {
+        auto particle = mSystem->getParticle(i);
+        auto & pos = particle->getPosition();
+        auto index = i * 4;
+        data[index] = pos.x(); data[index+1] = pos.y(), data[index+2] = pos.z(); data[index + 4] = 1.f;
+    }
+    image->dirty();
 }
 
 void OSGPlanet::UpdateColorDataTexture() {

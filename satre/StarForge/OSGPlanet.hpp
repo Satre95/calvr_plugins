@@ -29,6 +29,7 @@ private:
     void InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir);
     void InitPlanetDrawPipeline();
 
+    void UpdatePositionDataTexture();
     void UpdateColorDataTexture();
     void UpdateAgeVelDataTexture();
 
@@ -46,6 +47,7 @@ private:
 
 	// (x, y, z) = velocity, (w) = age
 	osg::Texture2D * mAgeVelocityTexture = nullptr;
+	osg::Texture2D * mPositionTexture = nullptr;
 
     float mParticleLifeTime = 50;
 };
