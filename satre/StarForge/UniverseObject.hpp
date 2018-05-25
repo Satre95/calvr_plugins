@@ -28,6 +28,7 @@ public:
 protected:
     cvr::MenuRangeValue * mScaleRangeSlider = nullptr;
     cvr::MenuText * mFrameTimeItem = nullptr;
+    cvr::MenuText * mNumParticlesItem = nullptr;
     float mScale = 1.0f;
 
 

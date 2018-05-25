@@ -22,6 +22,8 @@ public:
 	void PreFrame();
 	void PostFrame();
 
+	int GetNumParticles() const { return mSystem->numParticles();}
+
 private:
     void InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir);
     void InitPlanetGeometry();
@@ -40,6 +42,5 @@ private:
 	osg::ref_ptr<osg::Texture2D> mColorTexture = nullptr;
 	osg::ref_ptr<osg::Texture2D> mAgeTexture = nullptr;
 
-    float mParticleLifeTime = 3;
-    int mEstimatedMaxParticles = 0;
+    float mParticleLifeTime = 10;
 };

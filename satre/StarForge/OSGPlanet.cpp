@@ -24,7 +24,7 @@
 #include <cvrKernel/PluginHelper.h>
 #include <cvrKernel/CVRViewer.h>
 
-int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime);
+//int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime);
 
 OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) : mAssetsDir(assetsDir),
 																						   mRoot(new osg::MatrixTransform)
@@ -51,7 +51,6 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     pTemplate.setSizeRange(osgParticle::rangef(2.f, 2.f));
     pTemplate.setColorRange(osgParticle::rangev4(osg::Vec4(1.f, 0.5f, 0.3f, 1.f), osg::Vec4(0.5f, 0.7f, 1.0f, 1.f)));
     mSystem->setDefaultParticleTemplate(pTemplate);
-
     // Init the emitter.
     auto * emitter = new osgParticle::ModularEmitter;
     emitter->setParticleSystem(mSystem);
@@ -61,10 +60,8 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
 //    counter->setRateRange(80, 120);
     auto * counter = new osgParticle::ConstantRateCounter;
     counter->setMinimumNumberOfParticlesToCreate(3);
-    counter->setNumberOfParticlesPerSecondToCreate(15);
-//    mEstimatedMaxParticles = getestimatedMaxNumberOfParticles(counter, mParticleLifeTime);
-    mEstimatedMaxParticles = mSystem->getEstimatedMaxNumOfParticles();
-    std::cout << "Estimated max number of particles: " << mEstimatedMaxParticles << std::endl;
+    counter->setNumberOfParticlesPerSecondToCreate(5);
+    std::cerr << "Estimated max number of particles: " << counter->getEstimatedMaxNumOfParticles(pTemplate.getLifeTime()) << std::endl;
     emitter->setCounter(counter);
 
     // Init the placer for the emitter
@@ -167,7 +164,8 @@ void OSGPlanet::InitPlanetGeometry() {
 
     // Setup the textures that will hold the particle data
     auto stateset = geode->getOrCreateStateSet();
-    int texSize = int(std::ceil(std::sqrt(mEstimatedMaxParticles)));
+    int texSize = int(std::ceil(fsqrtf(mSystem->getEstimatedMaxNumOfParticles())));
+    std::cerr << "Initializing textures with width " << texSize << std::endl;
 
     {
         mColorTexture = new osg::Texture2D;
@@ -177,7 +175,7 @@ void OSGPlanet::InitPlanetGeometry() {
         mColorTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
         mColorTexture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
         mColorTexture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
-        mColorTexture->setInternalFormat(GL_RGBA32F_ARB);
+        mColorTexture->setInternalFormat(GL_RGBA32F);
         stateset->setTextureAttributeAndModes(0, mColorTexture, osg::StateAttribute::ON);
 
         osg::ref_ptr<osg::Image> image = new osg::Image;
@@ -203,11 +201,20 @@ void OSGPlanet::InitPlanetGeometry() {
         mAgeTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
         mAgeTexture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
         mAgeTexture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
-        mAgeTexture->setInternalFormat(GL_RGBA32F_ARB);
+        mAgeTexture->setInternalFormat(GL_R32F);
         stateset->setTextureAttributeAndModes(1, mAgeTexture, osg::StateAttribute::ON);
 
         osg::ref_ptr<osg::Image> image = new osg::Image;
         image->allocateImage(texSize, texSize, 1, GL_R, GL_FLOAT);
+        auto data = reinterpret_cast<float *>(image->data());
+        // zero fill image
+        for (int y = 0; y < image->t(); ++y) {
+            for (int x = 0; x < image->s(); ++x) {
+                int i = (x * image->t() + y) * 4;
+                data[i] = 0.f;
+            }
+        }
+        image->dirty();
         mAgeTexture->setImage(image);
     }
 
@@ -236,17 +243,11 @@ void OSGPlanet::InitPlanetGeometry() {
 
 
 void OSGPlanet::PreFrame() {
-
+//    UpdateColorDataTexture();
 }
 
 void OSGPlanet::PostFrame() {
 
-}
-
-int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime) {
-    int minNumParticles =  static_cast<int>(counter->getMinimumNumberOfParticlesToCreate() * 60.0f * lifetime);
-    int baseNumPartciles = static_cast<int>(counter->getNumberOfParticlesPerSecondToCreate() * lifetime);
-    return osg::maximum(minNumParticles, baseNumPartciles);
 }
 
 void OSGPlanet::UpdateColorDataTexture() {
@@ -311,3 +312,9 @@ void OSGPlanet::UpdateColorDataTexture() {
     // mark for upload
     image->dirty();
 }
+
+//int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime) {
+//    int minNumParticles =  static_cast<int>(counter->getMinimumNumberOfParticlesToCreate() * 60.0f * lifetime);
+//    int baseNumPartciles = static_cast<int>(counter->getNumberOfParticlesPerSecondToCreate() * lifetime);
+//    return osg::maximum(minNumParticles, baseNumPartciles);
+//}

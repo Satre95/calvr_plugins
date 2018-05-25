@@ -29,6 +29,8 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
         addMenuItem(mScaleRangeSlider);
         mFrameTimeItem = new cvr::MenuText("Last Frame timing (ms): ");
         addMenuItem(mFrameTimeItem);
+        mNumParticlesItem = new cvr::MenuText("Number of Particles: ");
+        addMenuItem(mNumParticlesItem);
     }
 
 
@@ -85,6 +87,7 @@ UniverseObject::~UniverseObject()
 	delete mScaleRangeSlider;
 	delete mPlanet;
     delete mFrameTimeItem;
+    delete mNumParticlesItem;
 }
 
 void UniverseObject::menuCallback(MenuItem * item)
@@ -112,7 +115,16 @@ void UniverseObject::PreFrame() {
 
 void UniverseObject::PostFrame() {
     mPlanet->PostFrame();
-    std::stringstream ss;
-    ss << "Last Frame timing: " << PluginHelper::getLastFrameDuration() * 1000.f << " ms";
-    mFrameTimeItem->setText(ss.str());
+    {
+        std::stringstream ss;
+        ss << "Last Frame timing: " << PluginHelper::getLastFrameDuration() * 1000.f << " ms";
+        mFrameTimeItem->setText(ss.str());
+    }
+
+    {
+        std::stringstream ss;
+        ss << "Number of particles: " << mPlanet->GetNumParticles();
+        mNumParticlesItem->setText(ss.str());
+
+    }
 }
