@@ -30,6 +30,7 @@ private:
     void InitPlanetGeometry();
 
     void UpdateColorDataTexture();
+    void UpdateAgeVelDataTexture();
 
 	osgParticle::ParticleSystem * mSystem = nullptr;
 	osgParticle::ModularEmitter * mParticleEmitter = nullptr;

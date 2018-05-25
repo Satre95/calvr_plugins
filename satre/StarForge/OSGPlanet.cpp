@@ -23,6 +23,7 @@
 #include <cvrConfig/ConfigManager.h>
 #include <cvrKernel/PluginHelper.h>
 #include <cvrKernel/CVRViewer.h>
+#include <cstring>
 
 //int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime);
 osg::Image * CreateImage(int width, int height, int numComponents);
@@ -96,7 +97,7 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
         } else {
             v = new RepulsorVorton(pos);
         }
-        v->SetVorticity(RandomFloat(5.f));
+        v->SetVorticity(RandomFloat(8.f));
         program->addOperator(v);
 
         vortonsVertices->push_back(GLM2OSG(v->GetPosition()));
@@ -135,13 +136,12 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     mRoot->addChild(program);
 
     // Create a drawable target for the particle system
-    auto geode = new osg::Geode;
-    geode->setCullingActive(false);
-    geode->addDrawable(mSystem);
-    // Recycle the vortons geode stateset for particle debug draw.
-    geode->setStateSet(vortonsGeode->getOrCreateStateSet());
-
-    mRoot->addChild(geode);
+//    auto geode = new osg::Geode;
+//    geode->setCullingActive(false);
+//    geode->addDrawable(mSystem);
+//    // Recycle the vortons geode stateset for particle debug draw.
+//    geode->setStateSet(vortonsGeode->getOrCreateStateSet());
+//    mRoot->addChild(geode);
 
     // Create a particle system updater
     auto psUpdater = new osgParticle::ParticleSystemUpdater;
@@ -221,6 +221,7 @@ void OSGPlanet::PostFrame() {
 void OSGPlanet::UpdateColorDataTexture() {
     auto image = mColorTexture->getImage();
     auto texWidth = image->s();
+    ClearImage(image);
 
     if (!image->isDataContiguous()) std::cerr << "Image data is not contiguous!" << std::endl;
     auto data = reinterpret_cast<float *>(image->data());
@@ -281,6 +282,7 @@ void OSGPlanet::UpdateColorDataTexture() {
     // mark for upload
     image->dirty();
 }
+
 
 //int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime) {
 //    int minNumParticles =  static_cast<int>(counter->getMinimumNumberOfParticlesToCreate() * 60.0f * lifetime);
@@ -343,5 +345,7 @@ osg::Texture2D * CreateTexture(int width, int height, int numComponents) {
 }
 
 void ClearImage(osg::Image * image) {
+    auto sizeInBytes = image->getTotalSizeInBytes();
+    std::memset(image->data(), 0, sizeInBytes);
 
 }

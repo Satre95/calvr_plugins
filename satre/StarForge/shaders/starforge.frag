@@ -19,5 +19,8 @@ out vec4 OutColor;
 void main() {
 	vec4 texColor = texture(colorTexture, fs_in.ColorTexCoord);
 	OutColor = texColor;
+
+	// OutColor = texColor * fs_in.FragColor;
+	// OutColor = fs_in.FragColor;
 	
 }
