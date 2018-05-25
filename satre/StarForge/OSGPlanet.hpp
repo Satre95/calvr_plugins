@@ -27,7 +27,7 @@ public:
 
 private:
     void InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir);
-    void InitPlanetGeometry();
+    void InitPlanetDrawPipeline();
 
     void UpdateColorDataTexture();
     void UpdateAgeVelDataTexture();

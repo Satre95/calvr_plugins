@@ -29,12 +29,13 @@
 osg::Image * CreateImage(int width, int height, int numComponents);
 osg::Texture2D * CreateTexture(int width, int height, int numComponents);
 void ClearImage(osg::Image * image);
+std::pair<float, float> GetTextureCoordsofParticle(osgParticle::Particle * particle);
 
 OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) : mAssetsDir(assetsDir),
 																						   mRoot(new osg::MatrixTransform)
 {
     InitParticleSystem(numRepulsors, numAttractors, assetsDir);
-    InitPlanetGeometry();
+    InitPlanetDrawPipeline();
 }
 
 OSGPlanet::~OSGPlanet() = default;
@@ -150,7 +151,7 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     mRoot->addChild(psUpdater);
 }
 
-void OSGPlanet::InitPlanetGeometry() {
+void OSGPlanet::InitPlanetDrawPipeline() {
     // Create the sphere
     mPlanetSphere = new osg::ShapeDrawable(
             new osg::Sphere(GLM2OSG(params::gPlanetCenter), params::gPlanetRadius));
@@ -212,6 +213,7 @@ void OSGPlanet::InitPlanetGeometry() {
 
 void OSGPlanet::PreFrame() {
     UpdateColorDataTexture();
+    UpdateAgeVelDataTexture();
 }
 
 void OSGPlanet::PostFrame() {
@@ -226,55 +228,35 @@ void OSGPlanet::UpdateColorDataTexture() {
     if (!image->isDataContiguous()) std::cerr << "Image data is not contiguous!" << std::endl;
     auto data = reinterpret_cast<float *>(image->data());
 
-    std::unordered_map<std::pair<int, int>, int> contribCount;
-
     // Every frame, refill the textures with the particle data.
     // assume column major: x * height + y
     int numParticles = mSystem->numParticles();
     for (int i = 0; i < numParticles; ++i) {
         // Get a particle and convert its pos into spherical coords.
         auto particle = mSystem->getParticle(i);
-        auto &pos = particle->getPosition();
-        auto spherePos = ConvertCartesianToSpherical(pos); //(r, inclination, azimuth)
-
-        // in tex coordinates, inclination = s, azimuth = t
-        float &inclination = spherePos.y();
-        float &azimuth = spherePos.z();
-        float s = MapToRange(inclination, 0.f, osg::PIf, 0.f, 1.f);
-        float t = MapToRange(azimuth, -osg::PIf, osg::PIf, 0.f, 1.f);
-//        assert(s >= 0.f && s <= 1.f);
-//        assert(t >= 0.f && t <= 1.f);
+        auto texCoords = GetTextureCoordsofParticle(particle);
+        auto & s = texCoords.first;
+        auto & t = texCoords.second;
 
         // Convert from texture coordinates to image coordinates
         auto x = int(std::floor(s * image->s()));
         auto y = int(std::floor(t * image->t()));
 
-        if(contribCount.find(std::make_pair(x, y)) == contribCount.end()) {
-            contribCount.insert(std::make_pair(std::make_pair(x, y), 1));
-        } else {
-            (contribCount.at(std::make_pair(x, y)))++;
-        }
-
         int index = (x * image->t() + y) * 4;
-//        assert(index < image->getTotalDataSize());
-//        assert(index + 1 < image->getTotalDataSize());
-//        assert(index + 2 < image->getTotalDataSize());
-//        assert(index + 3 < image->getTotalDataSize());
         data[index] += particle->getCurrentColor().r();
         data[index+1] += particle->getCurrentColor().g();
         data[index+2] += particle->getCurrentColor().b();
-        data[index+3] += particle->getCurrentColor().a();
+        data[index+3] += 1.f;
     }
 
     // Average out color data
     for (int y = 0; y < image->t(); ++y) {
         for (int x = 0; x < image->s(); ++x) {
-            if(contribCount.find(std::make_pair(x, y)) != contribCount.end()) {
-                auto numContribs = float(contribCount.at(std::make_pair(x, y)));
-
-                int i = (x * image->t() + y) * 4;
+            int i = (x * image->t() + y) * 4;
+            if(data[i+3] != 0.f) {
+                float & numContribs = data[i+3];
                 data[i] /= numContribs; data[i+1] /= numContribs;
-                data[i+2] /= numContribs; data[i+3] /= numContribs;
+                data[i+2] /= numContribs;
             }
         }
     }
@@ -283,6 +265,56 @@ void OSGPlanet::UpdateColorDataTexture() {
     image->dirty();
 }
 
+void OSGPlanet::UpdateAgeVelDataTexture() {
+    auto image = mAgeVelocityTexture->getImage();
+    auto texWidth = image->s();
+    ClearImage(image);
+    if (!image->isDataContiguous()) std::cerr << "Image data is not contiguous!" << std::endl;
+    auto data = reinterpret_cast<float *>(image->data());
+
+    std::unordered_map<std::pair<int, int>, float> contribs;
+
+    int numParticles = mSystem->numParticles();
+    for (int i = 0; i < numParticles; ++i) {
+        // Get a particle and convert its pos into spherical coords.
+        auto particle = mSystem->getParticle(i);
+        auto & vel = particle->getVelocity();
+        double age = particle->getAge();
+        auto texCoords = GetTextureCoordsofParticle(particle);
+        auto & s = texCoords.first;
+        auto & t = texCoords.second;
+
+        auto x = int(std::floor(s * image->s()));
+        auto y = int(std::floor(t * image->t()));
+
+        int index = (x * image->t() + y) * 4;
+
+        data[index] = vel.x();
+        data[index + 1] = vel.y();
+        data[index + 2] = vel.z();
+        data[index + 3] = float(age);
+        if(contribs.find(std::make_pair(x, y)) == contribs.end())
+            contribs.insert(std::make_pair(std::make_pair(x, y), 1.f));
+        else
+            contribs.at(std::make_pair(x, y)) += 1.f;
+    }
+
+    // Average out contributions
+    for (int y = 0; y < image->t(); ++y) {
+        for (int x = 0; x < image->s(); ++x) {
+            if(contribs.find(std::make_pair(x, y)) != contribs.end()) {
+                int i = (x * image->t() + y) * 4;
+                auto & numContribs = contribs.at(std::make_pair(x, y));
+                data[i] /= numContribs;
+                data[i+1] /= numContribs;
+                data[i+2] /= numContribs;
+                data[i+3] /= numContribs;
+            }
+        }
+    }
+
+    image->dirty();
+}
 
 //int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime) {
 //    int minNumParticles =  static_cast<int>(counter->getMinimumNumberOfParticlesToCreate() * 60.0f * lifetime);
@@ -347,5 +379,16 @@ osg::Texture2D * CreateTexture(int width, int height, int numComponents) {
 void ClearImage(osg::Image * image) {
     auto sizeInBytes = image->getTotalSizeInBytes();
     std::memset(image->data(), 0, sizeInBytes);
+}
 
+std::pair<float, float> GetTextureCoordsofParticle(osgParticle::Particle * particle) {
+    auto &pos = particle->getPosition();
+    auto spherePos = ConvertCartesianToSpherical(pos); //(r, inclination, azimuth)
+    // in tex coordinates, inclination = s, azimuth = t
+    float &inclination = spherePos.y();
+    float &azimuth = spherePos.z();
+    float s = MapToRange(inclination, 0.f, osg::PIf, 0.f, 1.f);
+    float t = MapToRange(azimuth, -osg::PIf, osg::PIf, 0.f, 1.f);
+
+    return std::make_pair(s, t);
 }
