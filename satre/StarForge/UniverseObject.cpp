@@ -32,7 +32,7 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
         mGaussianSigmaRangeSlider->setCallback(this);
         addMenuItem(mGaussianSigmaRangeSlider);
 
-        mRotationRateRangeSlider = new MenuRangeValue("Rotation", 0.f, 10.f, 1.f);
+        mRotationRateRangeSlider = new MenuRangeValue("Rotation", 0.f, 10.f, 0.1f);
         mRotationRateRangeSlider->setCallback(this);
         addMenuItem(mRotationRateRangeSlider);
 

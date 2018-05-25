@@ -28,7 +28,7 @@ public:
 	void SetRotationRate(float rate) { mRotationRate = rate; }
 
 private:
-    void InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir);
+    void InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir, bool drawSystem = false);
     void InitPlanetDrawPipeline();
 
     void UpdatePositionDataTexture();
@@ -54,7 +54,9 @@ private:
 	osg::Texture2D * mPositionTexture = nullptr;
 
 	osg::Uniform * mUGaussianSigma = nullptr;
+	osg::Uniform * mUTime = nullptr;
+	osg::Uniform * mUResolution = nullptr;
 
-    float mParticleLifeTime = 5;
-    float mRotationRate = 1.f;
+    float mParticleLifeTime = 10.f;
+    float mRotationRate = 0.5f;
 };

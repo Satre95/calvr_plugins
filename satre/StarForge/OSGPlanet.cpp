@@ -38,13 +38,13 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
     mRoot = mRotationNode;
     mLastTransform = mScaleNode;
 
-    InitParticleSystem(numRepulsors, numAttractors, assetsDir);
+    InitParticleSystem(numRepulsors, numAttractors, assetsDir, true);
     InitPlanetDrawPipeline();
 }
 
 OSGPlanet::~OSGPlanet() = default;
 
-void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) {
+void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir, bool drawSystem) {
 
     auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
 
@@ -68,8 +68,8 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
 //    auto * counter = new osgParticle::RandomRateCounter;
 //    counter->setRateRange(80, 120);
     auto * counter = new osgParticle::ConstantRateCounter;
-    counter->setMinimumNumberOfParticlesToCreate(15);
-    counter->setNumberOfParticlesPerSecondToCreate(20);
+    counter->setMinimumNumberOfParticlesToCreate(25);
+    counter->setNumberOfParticlesPerSecondToCreate(50);
     std::cerr << "Estimated max number of particles: " << counter->getEstimatedMaxNumOfParticles(pTemplate.getLifeTime()) << std::endl;
     mParticleEmitter->setCounter(counter);
 
@@ -90,14 +90,15 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     auto * program = new osgParticle::ModularProgram;
     program->setParticleSystem(mSystem);
     program->addOperator(new PositionCorrectionOperator);
-
+    // Add the program to the scene graph
+    mLastTransform->addChild(program);
 
     osg::ref_ptr<osg::Vec3Array> vortonsVertices = new osg::Vec3Array;
     osg::ref_ptr<osg::Vec4Array> vortonsColors = new osg::Vec4Array;
 	for (size_t i = 0; i < (numAttractors + numRepulsors); i++) {
         auto pos = RandomPointOnSphere() * params::gPlanetRadius;
-        Vorton * v;
-        if(i < numAttractors) {
+        Vorton *v;
+        if (i < numAttractors) {
             v = new AttractorVorton(pos);
         } else {
             v = new RepulsorVorton(pos);
@@ -105,48 +106,51 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
         v->SetVorticity(RandomFloat(8.f));
         program->addOperator(v);
 
-        vortonsVertices->push_back(GLM2OSG(v->GetPosition()));
-        osg::Vec4 color;
-        if (i < numAttractors) {
-            color = osg::Vec4(0.f, 1.f, 0.f, 1.f);
-        } else {
-            color = osg::Vec4(1.f, 0.f, 0.f, 1.f);
+        if (drawSystem) {
+            vortonsVertices->push_back(GLM2OSG(v->GetPosition()));
+            osg::Vec4 color;
+            if (i < numAttractors) {
+                color = osg::Vec4(0.f, 1.f, 0.f, 1.f);
+            } else {
+                color = osg::Vec4(1.f, 0.f, 0.f, 1.f);
+            }
+            vortonsColors->push_back(color);
         }
-        vortonsColors->push_back(color);
-
     }
 
-    auto normals = new osg::Vec3Array;
-	normals->push_back(osg::Vec3(0.f, -1.f, 0.f));
+    if(drawSystem) {
+        auto normals = new osg::Vec3Array;
+        normals->push_back(osg::Vec3(0.f, -1.f, 0.f));
 
-    auto vortonsGeom = new osg::Geometry;
-    vortonsGeom->setVertexArray(vortonsVertices);
-    vortonsGeom->setColorArray(vortonsColors, osg::Array::BIND_PER_VERTEX);
-    vortonsGeom->setNormalArray(normals, osg::Array::BIND_OVERALL);
-    vortonsGeom->addPrimitiveSet(new osg::DrawArrays(GL_POINTS, 0, numAttractors + numRepulsors));
-    vortonsGeom->getOrCreateStateSet()->setAttribute(new osg::Point(12.f), osg::StateAttribute::ON);
-    auto vortonsGeode = new osg::Geode;
-    vortonsGeode->setCullingActive(false);
-    vortonsGeode->addDrawable(vortonsGeom);
-    // Create a shader program to render vortons
-    auto drawProgram = new osg::Program;
-    auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "particleDebug.vert"));
-    auto fragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "particleDebug.frag"));
-    drawProgram->addShader(vertexShader);
-    drawProgram->addShader(fragShader);
-    vortonsGeode->getOrCreateStateSet()->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-    mLastTransform->addChild(vortonsGeode);
+        auto vortonsGeom = new osg::Geometry;
+        vortonsGeom->setVertexArray(vortonsVertices);
+        vortonsGeom->setColorArray(vortonsColors, osg::Array::BIND_PER_VERTEX);
+        vortonsGeom->setNormalArray(normals, osg::Array::BIND_OVERALL);
+        vortonsGeom->addPrimitiveSet(new osg::DrawArrays(GL_POINTS, 0, numAttractors + numRepulsors));
+        vortonsGeom->getOrCreateStateSet()->setAttribute(new osg::Point(12.f), osg::StateAttribute::ON);
+        auto vortonsGeode = new osg::Geode;
+        vortonsGeode->setCullingActive(false);
+        vortonsGeode->addDrawable(vortonsGeom);
+        // Create a shader program to render vortons
+        auto drawProgram = new osg::Program;
+        auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX,
+                                                        osgDB::findDataFile(shadersPath + "particleDebug.vert"));
+        auto fragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT,
+                                                      osgDB::findDataFile(shadersPath + "particleDebug.frag"));
+        drawProgram->addShader(vertexShader);
+        drawProgram->addShader(fragShader);
+        vortonsGeode->getOrCreateStateSet()->setAttribute(drawProgram,
+                                                          osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+        mLastTransform->addChild(vortonsGeode);
 
-    // Add the program to the scene graph
-    mLastTransform->addChild(program);
-
-    // Create a drawable target for the particle system
-    auto geode = new osg::Geode;
-    geode->setCullingActive(false);
-    geode->addDrawable(mSystem);
-    // Recycle the vortons geode stateset for particle debug draw.
-    geode->setStateSet(vortonsGeode->getOrCreateStateSet());
-    mLastTransform->addChild(geode);
+        // Create a drawable target for the particle system
+        auto geode = new osg::Geode;
+        geode->setCullingActive(false);
+        geode->addDrawable(mSystem);
+        // Recycle the vortons geode stateset for particle debug draw.
+        geode->setStateSet(vortonsGeode->getOrCreateStateSet());
+        mLastTransform->addChild(geode);
+    }
 
     // Create a particle system updater
     auto psUpdater = new osgParticle::ParticleSystemUpdater;
@@ -227,6 +231,15 @@ void OSGPlanet::InitPlanetDrawPipeline() {
     stateset->addUniform(mUGaussianSigma);
     mUGaussianSigma->set(50.f);
 
+    mUResolution = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC2, "u_resolution");
+    stateset->addUniform(mUResolution);
+    osg::Vec2 dims(cvr::PluginHelper::getScreenInfo(0)->width, cvr::PluginHelper::getScreenInfo(0)->height);
+    mUResolution->set(dims);
+
+    mUTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_time");
+    stateset->addUniform(mUTime);
+    mUTime->set(0.f);
+
     // Add it to the scene graph
     mLastTransform->addChild(geode);
 }
@@ -239,9 +252,11 @@ void OSGPlanet::PreFrame() {
     rotMat.makeRotate(rotation, osg::Vec3(0.f, 0.f, 1.f));
     mRotationNode->setMatrix(rotMat);
 
-    UpdatePositionDataTexture();
-    UpdateColorDataTexture();
-    UpdateAgeVelDataTexture();
+    mUTime->set(float(elapsedTime));
+
+//    UpdatePositionDataTexture();
+//    UpdateColorDataTexture();
+//    UpdateAgeVelDataTexture();
 }
 
 void OSGPlanet::PostFrame() {
