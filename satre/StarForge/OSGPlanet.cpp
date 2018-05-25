@@ -31,9 +31,13 @@ osg::Texture2D * CreateTexture(int width, int height, int numComponents);
 void ClearImage(osg::Image * image);
 std::pair<float, float> GetTextureCoordsofParticle(osgParticle::Particle * particle);
 
-OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) : mAssetsDir(assetsDir),
-																						   mRoot(new osg::MatrixTransform)
-{
+OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) : mAssetsDir(assetsDir){
+    mRotationNode = new osg::MatrixTransform;
+    mScaleNode = new osg::MatrixTransform;
+    mRotationNode->addChild(mScaleNode);
+    mRoot = mRotationNode;
+    mLastTransform = mScaleNode;
+
     InitParticleSystem(numRepulsors, numAttractors, assetsDir);
     InitPlanetDrawPipeline();
 }
@@ -64,8 +68,8 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
 //    auto * counter = new osgParticle::RandomRateCounter;
 //    counter->setRateRange(80, 120);
     auto * counter = new osgParticle::ConstantRateCounter;
-    counter->setMinimumNumberOfParticlesToCreate(3);
-    counter->setNumberOfParticlesPerSecondToCreate(5);
+    counter->setMinimumNumberOfParticlesToCreate(15);
+    counter->setNumberOfParticlesPerSecondToCreate(20);
     std::cerr << "Estimated max number of particles: " << counter->getEstimatedMaxNumOfParticles(pTemplate.getLifeTime()) << std::endl;
     mParticleEmitter->setCounter(counter);
 
@@ -80,7 +84,7 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     mParticleEmitter->setShooter(shooter);
 
     // Add the shooter to the scene graph.
-    mRoot->addChild(mParticleEmitter);
+    mLastTransform->addChild(mParticleEmitter);
 
     // Create a program to control the post-spawning behavior of the particles
     auto * program = new osgParticle::ModularProgram;
@@ -88,8 +92,8 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     program->addOperator(new PositionCorrectionOperator);
 
 
-//    osg::ref_ptr<osg::Vec3Array> vortonsVertices = new osg::Vec3Array;
-//    osg::ref_ptr<osg::Vec4Array> vortonsColors = new osg::Vec4Array;
+    osg::ref_ptr<osg::Vec3Array> vortonsVertices = new osg::Vec3Array;
+    osg::ref_ptr<osg::Vec4Array> vortonsColors = new osg::Vec4Array;
 	for (size_t i = 0; i < (numAttractors + numRepulsors); i++) {
         auto pos = RandomPointOnSphere() * params::gPlanetRadius;
         Vorton * v;
@@ -101,17 +105,17 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
         v->SetVorticity(RandomFloat(8.f));
         program->addOperator(v);
 
-//        vortonsVertices->push_back(GLM2OSG(v->GetPosition()));
-//        osg::Vec4 color;
-//        if (i < numAttractors) {
-//            color = osg::Vec4(0.f, 1.f, 0.f, 1.f);
-//        } else {
-//            color = osg::Vec4(1.f, 0.f, 0.f, 1.f);
-//        }
-//        vortonsColors->push_back(color);
+        vortonsVertices->push_back(GLM2OSG(v->GetPosition()));
+        osg::Vec4 color;
+        if (i < numAttractors) {
+            color = osg::Vec4(0.f, 1.f, 0.f, 1.f);
+        } else {
+            color = osg::Vec4(1.f, 0.f, 0.f, 1.f);
+        }
+        vortonsColors->push_back(color);
 
     }
-    /*
+
     auto normals = new osg::Vec3Array;
 	normals->push_back(osg::Vec3(0.f, -1.f, 0.f));
 
@@ -131,24 +135,24 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     drawProgram->addShader(vertexShader);
     drawProgram->addShader(fragShader);
     vortonsGeode->getOrCreateStateSet()->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-    mRoot->addChild(vortonsGeode);
-    */
+    mLastTransform->addChild(vortonsGeode);
+
     // Add the program to the scene graph
-    mRoot->addChild(program);
+    mLastTransform->addChild(program);
 
     // Create a drawable target for the particle system
-//    auto geode = new osg::Geode;
-//    geode->setCullingActive(false);
-//    geode->addDrawable(mSystem);
-//    // Recycle the vortons geode stateset for particle debug draw.
-//    geode->setStateSet(vortonsGeode->getOrCreateStateSet());
-//    mRoot->addChild(geode);
+    auto geode = new osg::Geode;
+    geode->setCullingActive(false);
+    geode->addDrawable(mSystem);
+    // Recycle the vortons geode stateset for particle debug draw.
+    geode->setStateSet(vortonsGeode->getOrCreateStateSet());
+    mLastTransform->addChild(geode);
 
     // Create a particle system updater
     auto psUpdater = new osgParticle::ParticleSystemUpdater;
     psUpdater->addParticleSystem(mSystem);
 
-    mRoot->addChild(psUpdater);
+    mLastTransform->addChild(psUpdater);
 }
 
 void OSGPlanet::InitPlanetDrawPipeline() {
@@ -219,12 +223,22 @@ void OSGPlanet::InitPlanetDrawPipeline() {
     stateset->addUniform(uMaxParticleAge);
     uMaxParticleAge->set(float(mSystem->getDefaultParticleTemplate().getLifeTime()));
 
+    mUGaussianSigma = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_gaussianSigma");
+    stateset->addUniform(mUGaussianSigma);
+    mUGaussianSigma->set(50.f);
+
     // Add it to the scene graph
-    mRoot->addChild(geode);
+    mLastTransform->addChild(geode);
 }
 
 
 void OSGPlanet::PreFrame() {
+    auto elapsedTime = cvr::PluginHelper::getProgramDuration();
+    auto rotation = std::fmod(mRotationRate * elapsedTime, 2.0 * osg::PI);
+    osg::Matrix rotMat;
+    rotMat.makeRotate(rotation, osg::Vec3(0.f, 0.f, 1.f));
+    mRotationNode->setMatrix(rotMat);
+
     UpdatePositionDataTexture();
     UpdateColorDataTexture();
     UpdateAgeVelDataTexture();
@@ -244,10 +258,18 @@ void OSGPlanet::UpdatePositionDataTexture() {
 
     // One slot for each particle.
     int numParticles = mSystem->numParticles();
+#pragma omp parallel for
     for (int i = 0; i < numParticles; ++i) {
         auto particle = mSystem->getParticle(i);
         auto & pos = particle->getPosition();
-        auto index = i * 4;
+        auto texCoords = GetTextureCoordsofParticle(particle);
+        auto & s = texCoords.first;
+        auto & t = texCoords.second;
+        // Convert from texture coordinates to image coordinates
+        auto x = int(std::floor(s * image->s()));
+        auto y = int(std::floor(t * image->t()));
+        int index = (x * image->t() + y) * 4;
+
         data[index] = pos.x(); data[index+1] = pos.y(), data[index+2] = pos.z(); data[index + 4] = 1.f;
     }
     image->dirty();
@@ -264,6 +286,7 @@ void OSGPlanet::UpdateColorDataTexture() {
     // Every frame, refill the textures with the particle data.
     // assume column major: x * height + y
     int numParticles = mSystem->numParticles();
+#pragma omp parallel for
     for (int i = 0; i < numParticles; ++i) {
         // Get a particle and convert its pos into spherical coords.
         auto particle = mSystem->getParticle(i);
@@ -283,6 +306,7 @@ void OSGPlanet::UpdateColorDataTexture() {
     }
 
     // Average out color data
+#pragma omp parallel for
     for (int y = 0; y < image->t(); ++y) {
         for (int x = 0; x < image->s(); ++x) {
             int i = (x * image->t() + y) * 4;
@@ -308,6 +332,7 @@ void OSGPlanet::UpdateAgeVelDataTexture() {
     std::unordered_map<std::pair<int, int>, float> contribs;
 
     int numParticles = mSystem->numParticles();
+#pragma omp parallel for
     for (int i = 0; i < numParticles; ++i) {
         // Get a particle and convert its pos into spherical coords.
         auto particle = mSystem->getParticle(i);
@@ -333,6 +358,7 @@ void OSGPlanet::UpdateAgeVelDataTexture() {
     }
 
     // Average out contributions
+#pragma omp parallel for
     for (int y = 0; y < image->t(); ++y) {
         for (int x = 0; x < image->s(); ++x) {
             if(contribs.find(std::make_pair(x, y)) != contribs.end()) {
@@ -368,6 +394,7 @@ osg::Image * CreateImage(int width, int height, int numComponents) {
     image->allocateImage(width, width, 1, pixelFormat, GL_FLOAT);
     auto data = reinterpret_cast<float *>(image->data());
     // zero fill image
+#pragma omp parallel for
     for (int y = 0; y < image->t(); ++y) {
         for (int x = 0; x < image->s(); ++x) {
             int i = (x * image->t() + y) * 4;

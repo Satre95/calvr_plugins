@@ -1,5 +1,5 @@
 #version 430 core
-#define NUM_STEPS 100
+#define NUM_STEPS 80
 #define PI 3.1415926535897932384626433832795
 
 
@@ -36,16 +36,22 @@ void main() {
 		for(int y = 0; y < NUM_STEPS; y++) {
 			vec3 texColor = texture(ColorTexture, vec2(s, t)).xyz;
 			/// Particle position is same as normal on unit sphere.
-			vec3 particlePos = normalize(texture(PositionTexture, vec2(s, t)).xyz);
-			localColor += localColor * Gaussian(dot(particlePos, fs_in.FragPos) - 1.f, u_gaussianSigma);
+			vec3 particlePos = texture(PositionTexture, vec2(s, t)).xyz;
+			localColor += texColor * Gaussian(dot(particlePos, fs_in.FragPos) - 1, u_gaussianSigma);
+			// localColor += texColor;
 			t += stepSize;
 		}
 
 		s += stepSize;
 	}
 
-	// OutColor = mix(fs_in.FragColor, texColor, age);
-	OutColor = vec4(localColor, 1.f);
+	vec3 finalColor = mix(localColor, texture(ColorTexture, fs_in.ColorTexCoord).xyz, 1.f - age);
+	OutColor = vec4(finalColor, 1.f);
+	// vec4 temp = texture(ColorTexture, fs_in.ColorTexCoord);
+	// OutColor = mix(temp, fs_in.FragColor, age);
+	// OutColor = vec4(abs(fs_in.FragPos), 1.f);
+	// OutColor = texture(PositionTexture, fs_in.ColorTexCoord);
+	
 }
 
 float Gaussian(float u, float sigma) {

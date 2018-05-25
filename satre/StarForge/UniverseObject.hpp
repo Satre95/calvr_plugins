@@ -27,6 +27,8 @@ public:
 
 protected:
     cvr::MenuRangeValue * mScaleRangeSlider = nullptr;
+    cvr::MenuRangeValue * mGaussianSigmaRangeSlider = nullptr;
+    cvr::MenuRangeValue * mRotationRateRangeSlider = nullptr;
     cvr::MenuText * mFrameTimeItem = nullptr;
     cvr::MenuText * mNumParticlesItem = nullptr;
     float mScale = 1.0f;

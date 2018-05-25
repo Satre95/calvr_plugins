@@ -27,8 +27,18 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
         mScaleRangeSlider = new MenuRangeValue("Scale", 0.1, 100, 1.0);
         mScaleRangeSlider->setCallback(this);
         addMenuItem(mScaleRangeSlider);
+
+        mGaussianSigmaRangeSlider = new MenuRangeValue("Sigma", 1.f, 1000.f, 50.f);
+        mGaussianSigmaRangeSlider->setCallback(this);
+        addMenuItem(mGaussianSigmaRangeSlider);
+
+        mRotationRateRangeSlider = new MenuRangeValue("Rotation", 0.f, 10.f, 1.f);
+        mRotationRateRangeSlider->setCallback(this);
+        addMenuItem(mRotationRateRangeSlider);
+
         mFrameTimeItem = new cvr::MenuText("Last Frame timing (ms): ");
         addMenuItem(mFrameTimeItem);
+
         mNumParticlesItem = new cvr::MenuText("Number of Particles: ");
         addMenuItem(mNumParticlesItem);
     }
@@ -85,6 +95,8 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
 UniverseObject::~UniverseObject()
 {
 	delete mScaleRangeSlider;
+	delete mGaussianSigmaRangeSlider;
+	delete mRotationRateRangeSlider;
 	delete mPlanet;
     delete mFrameTimeItem;
     delete mNumParticlesItem;
@@ -94,9 +106,13 @@ void UniverseObject::menuCallback(MenuItem * item)
 {
     if(item == mScaleRangeSlider) {
 	    setScale(mScaleRangeSlider->getValue());
-	}
+	} else if(item == mGaussianSigmaRangeSlider) {
+        mPlanet->SetShaderGaussianSigma(mGaussianSigmaRangeSlider->getValue());
+    } else if(item == mRotationRateRangeSlider) {
+        mPlanet->SetRotationRate(mRotationRateRangeSlider->getValue());
+    }
 
-	SceneObject::menuCallback(item);
+    SceneObject::menuCallback(item);
 }
 
 void UniverseObject::setScale(float scale) {
@@ -110,7 +126,6 @@ void UniverseObject::setScale(float scale) {
 
 void UniverseObject::PreFrame() {
     mPlanet->PreFrame();
-//    CVRViewer::instance()->getCamera()->getGraphicsContext()->getState()->setUseModelViewAndProjectionUniforms(true);
 }
 
 void UniverseObject::PostFrame() {

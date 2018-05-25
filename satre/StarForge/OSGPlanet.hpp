@@ -17,13 +17,15 @@ class OSGPlanet
 public:
 	OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir);
 	~OSGPlanet();
-	void SetScale(osg::Matrix & mat) { mRoot->setMatrix(mat); }
+	void SetScale(osg::Matrix & mat) { mScaleNode->setMatrix(mat); }
 	osg::Group * GetGraph() const { return mRoot; }
 
 	void PreFrame();
 	void PostFrame();
 
 	int GetNumParticles() const { return mSystem->numParticles();}
+	void SetShaderGaussianSigma(float sigma) {mUGaussianSigma->set(sigma); }
+	void SetRotationRate(float rate) { mRotationRate = rate; }
 
 private:
     void InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir);
@@ -39,7 +41,9 @@ private:
 
 	/// The root node of the particle system scene graph
 	osg::ref_ptr<osg::MatrixTransform> mRoot = nullptr;
-//	osg::ref_ptr<osg::MatrixTransform> mRotationNode = nullptr;
+    osg::ref_ptr<osg::MatrixTransform> mLastTransform = nullptr;
+	osg::ref_ptr<osg::MatrixTransform> mScaleNode = nullptr; // Scale node
+	osg::ref_ptr<osg::MatrixTransform> mRotationNode = nullptr;
 //	osg::ref_ptr<osg::MatrixTransform> mTranslationNode = nullptr;
 
 	osg::ref_ptr<osg::ShapeDrawable> mPlanetSphere = nullptr;
@@ -49,5 +53,8 @@ private:
 	osg::Texture2D * mAgeVelocityTexture = nullptr;
 	osg::Texture2D * mPositionTexture = nullptr;
 
-    float mParticleLifeTime = 50;
+	osg::Uniform * mUGaussianSigma = nullptr;
+
+    float mParticleLifeTime = 5;
+    float mRotationRate = 1.f;
 };
