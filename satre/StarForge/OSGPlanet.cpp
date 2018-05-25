@@ -206,12 +206,18 @@ void OSGPlanet::InitPlanetDrawPipeline() {
     drawProgram->addShader(vertexShader);
     drawProgram->addShader(fragShader);
     stateset->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+
+    auto uMaxParticleAge = new osg::Uniform(osg::Uniform::Type::FLOAT, "maxParticleAge");
+    stateset->addUniform(uMaxParticleAge);
+    uMaxParticleAge->set(float(mSystem->getDefaultParticleTemplate().getLifeTime()));
+
     // Add it to the scene graph
     mRoot->addChild(geode);
 }
 
 
 void OSGPlanet::PreFrame() {
+
     UpdateColorDataTexture();
     UpdateAgeVelDataTexture();
 }

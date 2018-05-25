@@ -39,6 +39,8 @@ void main() {
 	float s = MapToRange(inclination, 0.f, M_PI, 0.f, 1.f);
     float t = MapToRange(azimuth, -M_PI, M_PI, 0.f, 1.f);
     vs_out.ColorTexCoord = vec2(s, t);
+    vs_out.AgeVelTexCoord = vec2(s, t);
+    
 }
 
 //---------------------------------------------------------

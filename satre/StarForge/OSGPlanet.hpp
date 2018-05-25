@@ -47,5 +47,5 @@ private:
 	// (x, y, z) = velocity, (w) = age
 	osg::Texture2D * mAgeVelocityTexture = nullptr;
 
-    float mParticleLifeTime = 10;
+    float mParticleLifeTime = 50;
 };

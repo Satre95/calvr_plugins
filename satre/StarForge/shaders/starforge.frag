@@ -2,7 +2,7 @@
 
 //---------------------------------------------------------
 layout (binding = 0) uniform sampler2D colorTexture;
-layout (binding = 1) uniform sampler2D ageTexture;
+layout (binding = 1) uniform sampler2D ageVelocityTexture;
 uniform float maxParticleAge;
 
 //---------------------------------------------------------
@@ -18,9 +18,8 @@ out vec4 OutColor;
 //---------------------------------------------------------s
 void main() {
 	vec4 texColor = texture(colorTexture, fs_in.ColorTexCoord);
-	OutColor = texColor;
+	float age = texture(ageVelocityTexture, fs_in.AgeVelTexCoord).w / maxParticleAge;
+	vec3 velocity = texture(ageVelocityTexture, fs_in.AgeVelTexCoord).xyz;
 
-	// OutColor = texColor * fs_in.FragColor;
-	// OutColor = fs_in.FragColor;
-	
+	OutColor = mix(texColor, fs_in.FragColor, 1.f - age);
 }
