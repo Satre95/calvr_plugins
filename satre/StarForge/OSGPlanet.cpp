@@ -17,12 +17,8 @@
 #include <osg/Program>
 #include <osg/io_utils>
 #include <osg/Matrix>
-#include <osg/Shape>
-#include <osg/ShapeDrawable>
-#include <osg/Texture2D>
-#include <osg/BlendFunc>
-#include <osg/Depth>
-#include <osg/GLExtensions>
+#include <osgParticle/LinearInterpolator>
+#include <unordered_map>
 
 #include <cvrConfig/ConfigManager.h>
 #include <cvrKernel/PluginHelper.h>
@@ -31,15 +27,13 @@
 int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime);
 
 OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) : mAssetsDir(assetsDir),
-																						   mRoot(new osg::MatrixTransform),
-																						   mPlanetDrawProgram(new osg::Program)
+																						   mRoot(new osg::MatrixTransform)
 {
     InitParticleSystem(numRepulsors, numAttractors, assetsDir);
-//    InitPlanetGeometry();
+    InitPlanetGeometry();
 }
 
-OSGPlanet::~OSGPlanet() {
-}
+OSGPlanet::~OSGPlanet() = default;
 
 void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) {
 
@@ -48,13 +42,14 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     /// Init the particle system
     mSystem = new osgParticle::ParticleSystem;
     std::string assetsPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath", "/home/satre/Assets/StarForge/");
-    mSystem->setDefaultAttributes(assetsPath + "particle.png", true, false);
+    mSystem->setDefaultAttributes(assetsPath + "particle.png", false, false);
 
     // Init a template particle, which all future particles will be copies of.
     osgParticle::Particle pTemplate;
     pTemplate.setLifeTime(mParticleLifeTime);
     pTemplate.setMass(0.001f); // 1 gram of mass
-    pTemplate.setRadius(500.f);
+    pTemplate.setSizeRange(osgParticle::rangef(2.f, 2.f));
+    pTemplate.setColorRange(osgParticle::rangev4(osg::Vec4(1.f, 0.5f, 0.3f, 1.f), osg::Vec4(0.5f, 0.7f, 1.0f, 1.f)));
     mSystem->setDefaultParticleTemplate(pTemplate);
 
     // Init the emitter.
@@ -67,7 +62,8 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     auto * counter = new osgParticle::ConstantRateCounter;
     counter->setMinimumNumberOfParticlesToCreate(3);
     counter->setNumberOfParticlesPerSecondToCreate(15);
-    mEstimatedMaxParticles = getestimatedMaxNumberOfParticles(counter, mParticleLifeTime);
+//    mEstimatedMaxParticles = getestimatedMaxNumberOfParticles(counter, mParticleLifeTime);
+    mEstimatedMaxParticles = mSystem->getEstimatedMaxNumOfParticles();
     std::cout << "Estimated max number of particles: " << mEstimatedMaxParticles << std::endl;
     emitter->setCounter(counter);
 
@@ -85,14 +81,13 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     mRoot->addChild(emitter);
 
     // Create a program to control the post-spawning behavior of the particles
-    osgParticle::ModularProgram * program = new osgParticle::ModularProgram;
+    auto * program = new osgParticle::ModularProgram;
     program->setParticleSystem(mSystem);
-
     program->addOperator(new PositionCorrectionOperator);
 
 
-    auto vortonsVertices = new osg::Vec3Array;
-    auto vortonsColors = new osg::Vec4Array;
+    osg::ref_ptr<osg::Vec3Array> vortonsVertices = new osg::Vec3Array;
+    osg::ref_ptr<osg::Vec4Array> vortonsColors = new osg::Vec4Array;
 	for (size_t i = 0; i < (numAttractors + numRepulsors); i++) {
         auto pos = RandomPointOnSphere() * params::gPlanetRadius;
         Vorton * v;
@@ -101,7 +96,7 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
         } else {
             v = new RepulsorVorton(pos);
         }
-        v->SetVorticity(RandomFloat(10.f));
+        v->SetVorticity(RandomFloat(5.f));
         program->addOperator(v);
 
         vortonsVertices->push_back(GLM2OSG(v->GetPosition()));
@@ -146,7 +141,6 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     // Recycle the vortons geode stateset for particle debug draw.
     geode->setStateSet(vortonsGeode->getOrCreateStateSet());
 
-
     mRoot->addChild(geode);
 
     // Create a particle system updater
@@ -158,45 +152,63 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
 
 void OSGPlanet::InitPlanetGeometry() {
     // Create the sphere
-    auto sphereDrawable = new osg::ShapeDrawable(
+    mPlanetSphere = new osg::ShapeDrawable(
             new osg::Sphere(GLM2OSG(params::gPlanetCenter), params::gPlanetRadius));
 
     auto colorArray = new osg::Vec4Array;
     colorArray->push_back(osg::Vec4(0.3f, 0.3f, 0.76f, 0.3f));
-    sphereDrawable->setColorArray(colorArray, osg::Array::BIND_OVERALL);
-    sphereDrawable->setUseVertexBufferObjects(true);
-    sphereDrawable->setUseVertexArrayObject(true);
+    mPlanetSphere->setColorArray(colorArray, osg::Array::BIND_OVERALL);
+    mPlanetSphere->setUseVertexBufferObjects(true);
+    mPlanetSphere->setUseVertexArrayObject(true);
 
     // Create the Geode (Geometry Node)
     auto geode = new osg::Geode;
-    geode->addDrawable(sphereDrawable);
+    geode->addDrawable(mPlanetSphere);
 
     // Setup the textures that will hold the particle data
     auto stateset = geode->getOrCreateStateSet();
-    int texSize = static_cast<int>(std::ceil(std::sqrt(mEstimatedMaxParticles)));
+    int texSize = int(std::ceil(std::sqrt(mEstimatedMaxParticles)));
 
     {
-        auto posTexture = new osg::Texture2D;
-        posTexture->setDataVariance(osg::Object::DYNAMIC);
-        posTexture->setTextureSize(texSize, texSize); // Set to upper bound of square texture
-        posTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
-        posTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
-        posTexture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
-        posTexture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
-        posTexture->setInternalFormat(GL_RGBA32F_ARB);
-        stateset->setTextureAttributeAndModes(0, posTexture, osg::StateAttribute::ON);
+        mColorTexture = new osg::Texture2D;
+        mColorTexture->setDataVariance(osg::Object::DYNAMIC);
+        mColorTexture->setTextureSize(texSize, texSize); // Set to upper bound of square texture
+        mColorTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
+        mColorTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
+        mColorTexture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
+        mColorTexture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
+        mColorTexture->setInternalFormat(GL_RGBA32F_ARB);
+        stateset->setTextureAttributeAndModes(0, mColorTexture, osg::StateAttribute::ON);
+
+        osg::ref_ptr<osg::Image> image = new osg::Image;
+        image->allocateImage(texSize, texSize, 1, GL_RGBA, GL_FLOAT);
+        auto data = reinterpret_cast<float *>(image->data());
+        // zero fill image
+        for (int y = 0; y < image->t(); ++y) {
+            for (int x = 0; x < image->s(); ++x) {
+                int i = (x * image->t() + y) * 4;
+                data[i] = data[i+1] = data[i+2] = 0.f;
+                data[i+3] = 1.f;
+            }
+        }
+        image->dirty();
+        mColorTexture->setImage(image);
     }
 
     {
-        auto velTexture = new osg::Texture2D;
-        velTexture->setDataVariance(osg::Object::DYNAMIC);
-        velTexture->setTextureSize(texSize, texSize); // Set to upper bound of square texture
-        velTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
-        velTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
-        velTexture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
-        velTexture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
-        velTexture->setInternalFormat(GL_RGBA32F_ARB);
-        stateset->setTextureAttributeAndModes(1, velTexture, osg::StateAttribute::ON);
+        mAgeTexture = new osg::Texture2D;
+        mAgeTexture->setDataVariance(osg::Object::DYNAMIC);
+        mAgeTexture->setTextureSize(texSize, texSize); // Set to upper bound of square texture
+        mAgeTexture->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
+        mAgeTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
+        mAgeTexture->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::CLAMP_TO_EDGE);
+        mAgeTexture->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::CLAMP_TO_EDGE);
+        mAgeTexture->setInternalFormat(GL_RGBA32F_ARB);
+        stateset->setTextureAttributeAndModes(1, mAgeTexture, osg::StateAttribute::ON);
+
+        osg::ref_ptr<osg::Image> image = new osg::Image;
+        image->allocateImage(texSize, texSize, 1, GL_R, GL_FLOAT);
+        mAgeTexture->setImage(image);
     }
 
     // Load the shaders
@@ -222,7 +234,9 @@ void OSGPlanet::InitPlanetGeometry() {
     mRoot->addChild(geode);
 }
 
+
 void OSGPlanet::PreFrame() {
+
 }
 
 void OSGPlanet::PostFrame() {
@@ -233,4 +247,67 @@ int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter,
     int minNumParticles =  static_cast<int>(counter->getMinimumNumberOfParticlesToCreate() * 60.0f * lifetime);
     int baseNumPartciles = static_cast<int>(counter->getNumberOfParticlesPerSecondToCreate() * lifetime);
     return osg::maximum(minNumParticles, baseNumPartciles);
+}
+
+void OSGPlanet::UpdateColorDataTexture() {
+    unsigned int texWidth = static_cast<unsigned int>(std::ceil(fsqrtf(mSystem->numParticles())));
+    auto image = mColorTexture->getImage();
+    if (!image->isDataContiguous()) std::cerr << "Image data is not contiguous!" << std::endl;
+    auto data = reinterpret_cast<float *>(image->data());
+
+    std::unordered_map<std::pair<int, int>, int> contribCount;
+
+    // Every frame, refill the textures with the particle data.
+    // assume column major: x * height + y
+    int numParticles = mSystem->numParticles();
+    for (int i = 0; i < numParticles; ++i) {
+        // Get a particle and convert its pos into spherical coords.
+        auto particle = mSystem->getParticle(i);
+        auto &pos = particle->getPosition();
+        auto spherePos = ConvertCartesianToSpherical(pos); //(r, inclination, azimuth)
+
+        // in tex coordinates, inclination = s, azimuth = t
+        float &inclination = spherePos.y();
+        float &azimuth = spherePos.z();
+        float s = MapToRange(inclination, 0.f, osg::PIf, 0.f, 1.f);
+        float t = MapToRange(azimuth, -osg::PIf, osg::PIf, 0.f, 1.f);
+//        assert(s >= 0.f && s <= 1.f);
+//        assert(t >= 0.f && t <= 1.f);
+
+        // Convert from texture coordinates to image coordinates
+        auto x = int(std::floor(s * image->s()));
+        auto y = int(std::floor(t * image->t()));
+
+        if(contribCount.find(std::make_pair(x, y)) == contribCount.end()) {
+            contribCount.insert(std::make_pair(std::make_pair(x, y), 1));
+        } else {
+            (contribCount.at(std::make_pair(x, y)))++;
+        }
+
+        int index = (x * image->t() + y) * 4;
+//        assert(index < image->getTotalDataSize());
+//        assert(index + 1 < image->getTotalDataSize());
+//        assert(index + 2 < image->getTotalDataSize());
+//        assert(index + 3 < image->getTotalDataSize());
+        data[index] += particle->getCurrentColor().r();
+        data[index+1] += particle->getCurrentColor().g();
+        data[index+2] += particle->getCurrentColor().b();
+        data[index+3] += particle->getCurrentColor().a();
+    }
+
+    // Average out color data
+    for (int y = 0; y < image->t(); ++y) {
+        for (int x = 0; x < image->s(); ++x) {
+            if(contribCount.find(std::make_pair(x, y)) != contribCount.end()) {
+                auto numContribs = float(contribCount.at(std::make_pair(x, y)));
+
+                int i = (x * image->t() + y) * 4;
+                data[i] /= numContribs; data[i+1] /= numContribs;
+                data[i+2] /= numContribs; data[i+3] /= numContribs;
+            }
+        }
+    }
+
+    // mark for upload
+    image->dirty();
 }

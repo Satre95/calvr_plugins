@@ -22,5 +22,4 @@ void SphereTangentShooter::shoot(osgParticle::Particle * p) const {
 	vel.normalize();
 
 	p->setVelocity(vel);
-	p->setVelocity(osg::Vec3(0,0,0));
 }

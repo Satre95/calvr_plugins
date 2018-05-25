@@ -80,6 +80,44 @@ inline glm::vec3 ConvertSphericalToCartesian(const glm::vec3 & spCoords) {
 
  (x, y, z) -> (radius, inclination, azimuth)
 
+ \note assumes 0 ≤ inclination ≤ π
+ */
+inline osg::Vec3 ConvertCartesianToSpherical(const osg::Vec3 & cartCoords) {
+	const auto & x = cartCoords.x();
+	const auto & y = cartCoords.y();
+	const auto & z = cartCoords.z();
+
+	float r = std::sqrt(x * x + y * y + z * z);
+	return osg::Vec3(r,
+		std::acos(z / r),
+		std::atan(y / x)
+	);
+}
+
+/**
+ \brief Converts the given spherical coords to cartesian.
+
+ (radius, inclination, azimuth) -> (x, y, z)
+
+ \note assumes 0 ≤ inclination ≤ π
+*/
+inline osg::Vec3 ConvertSphericalToCartesian(const osg::Vec3 & spCoords) {
+	const auto & r = spCoords.x();            //dist
+	const auto & theta = spCoords.y();        //elevation
+	const auto & phi = spCoords.z();          //azimuth
+
+	return osg::Vec3(
+			r * std::sin(phi) * std::cos(theta),
+			r * std::sin(phi) * std::sin(theta),
+			r * std::cos(phi)
+	);
+}
+
+/**
+ \brief Converts the given cartesian coords to spherical.
+
+ (x, y, z) -> (radius, inclination, azimuth)
+
  \note assumes 0 ≤ elevation ≤ π
  */
 inline glm::vec3 ConvertCartesianToSpherical(const glm::vec3 & cartCoords) {
@@ -89,8 +127,8 @@ inline glm::vec3 ConvertCartesianToSpherical(const glm::vec3 & cartCoords) {
 
 	float r = std::sqrt(x * x + y * y + z * z);
 	return glm::vec3(r,
-		std::acos(z / r),
-		std::atan(y / x)
+					 std::acos(z / r),
+					 std::atan(y / x)
 	);
 }
 
@@ -154,4 +192,22 @@ inline osg::Vec3 GLM2OSG(const glm::vec3 & vec) {
 
 inline glm::vec3 OSG2GLM(const osg::Vec3 & vec) {
 	return glm::vec3(vec.x(), vec.y(), vec.z());
+}
+
+// From boost hash_combine
+template <typename T>
+inline void hash_combine(std::size_t & seed, const T & val) {
+	seed ^= std::hash<T>()(val) + 0x9e37779b9 + (seed << 6) + (seed >> 2);
+}
+
+namespace std {
+    template <> struct hash<std::pair<int, int>> {
+        typedef std::pair<int, int> argument_type;
+        std::size_t operator() (argument_type const & f) const {
+           std::size_t seed = 0;
+           hash_combine(seed, f.first);
+           hash_combine(seed, f.second);
+           return seed;
+        }
+    };
 }
