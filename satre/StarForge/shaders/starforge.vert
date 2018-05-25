@@ -1,10 +1,12 @@
 #version 430 core 
+#define M_PI 3.1415926535897932384626433832795
+
 //---------------------------------------------------------
 layout(location = 0) in vec4 osg_Vertex;
 layout(location = 1) in vec3 osg_Normal;
 layout(location = 2) in vec4 osg_Color;
-layout(location = 3) in vec4 osg_MultiTexCoord0;
-layout(location = 4) in vec4 osg_MultiTexCoord1;
+// layout(location = 3) in vec4 osg_MultiTexCoord0;
+// layout(location = 4) in vec4 osg_MultiTexCoord1;
 
 //---------------------------------------------------------
 uniform mat4 osg_ModelViewProjectionMatrix;
@@ -14,20 +16,29 @@ uniform mat4 osg_ViewMatrix;
 uniform mat4 osg_ViewMatrixInverse;
 
 //---------------------------------------------------------
-out vec4 FragColor;
-out vec2 PosTexCoords;
-out vec2 VelTexCoords;
+out VS_OUT {
+	vec4 FragColor;
+	vec2 ColorTexCoord;
+	vec2 AgeVelTexCoord;
+} vs_out;
 
 //---------------------------------------------------------
 vec3 ConvertCartesianToSpherical(vec3 cartCoords);
+float MapToRange(float val, float inputMin, float inputMax, float outputMin, float outputMax);
 
 //---------------------------------------------------------
 void main() {
 	gl_Position = osg_ModelViewProjectionMatrix * osg_Vertex;
 	
-	FragColor = osg_Color;
-	PosTexCoords = ConvertCartesianToSpherical(osg_Vertex.xyz).yz;
-	VelTexCoords = osg_MultiTexCoord1.st;
+	vs_out.FragColor = osg_Color;
+
+	//Convert our position to spherical coordinates and map to texture coords
+	vec3 sphereCoord = ConvertCartesianToSpherical(osg_Vertex.xyz);
+	float inclination = sphereCoord.y;
+	float azimuth = sphereCoord.z;
+	float s = MapToRange(inclination, 0.f, M_PI, 0.f, 1.f);
+    float t = MapToRange(azimuth, -M_PI, M_PI, 0.f, 1.f);
+    vs_out.ColorTexCoord = vec2(s, t);
 }
 
 //---------------------------------------------------------
@@ -48,4 +59,9 @@ vec3 ConvertCartesianToSpherical(vec3 cartCoords) {
 					 acos(cartCoords.z / r),
 					 atan(cartCoords.y / cartCoords.x)
 	);
+}
+
+//---------------------------------------------------------
+float MapToRange(float val, float inputMin, float inputMax, float outputMin, float outputMax) {
+    return ((val - inputMin) / (inputMax - inputMin) * (outputMax - outputMin) + outputMin);
 }

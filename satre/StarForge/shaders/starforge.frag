@@ -6,16 +6,18 @@ layout (binding = 1) uniform sampler2D ageTexture;
 uniform float maxParticleAge;
 
 //---------------------------------------------------------
-in vec4 FragColor;
-in vec2 PosTexCoords;
-in vec2 VelTexCoords;
+in VS_OUT {
+	vec4 FragColor;
+	vec2 ColorTexCoord;
+	vec2 AgeVelTexCoord;
+} fs_in;
 
 //---------------------------------------------------------
 out vec4 OutColor;
 
 //---------------------------------------------------------s
 void main() {
-	vec4 texColor = texture(colorTexture, PosTexCoords);
+	vec4 texColor = texture(colorTexture, fs_in.ColorTexCoord);
 	OutColor = texColor;
 	
 }
