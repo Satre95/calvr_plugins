@@ -6,6 +6,16 @@ set(CMAKE_CXX_STANDARD 14) # C++14...
 set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
 set(CMAKE_CXX_EXTENSIONS OFF) #...without compiler extensions like gnu++11
 
+OPTION (ENABLE_OpenMP "Enable OpenMP" ON)
+
+if(ENABLE_OpenMP)
+    find_package(OpenMP)
+    if(OPENMP_FOUND)
+        message("Compiling with OpenMP support")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    endif()
+endif()
+
 SET(CMAKE_MODULE_PATH "${CalVR_Plugins_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 
 OPTION(PLUGINS_GENERAL "Build General Plugins" ON)
