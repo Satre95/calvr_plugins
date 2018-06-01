@@ -2,7 +2,7 @@
 #include <osgUtil/CullVisitor>
 #include "SkyBox.hpp"
 
-SkyBox::SkyBox()
+SkyBox::SkyBox(float radius)
 {
     setReferenceFrame( osg::Transform::ABSOLUTE_RF );
     setCullingActive( false );
@@ -12,6 +12,12 @@ SkyBox::SkyBox()
     ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
     ss->setMode( GL_CULL_FACE, osg::StateAttribute::OFF );
     ss->setRenderBinDetails( 5, "RenderBin" );
+
+    mSkyGeode = new osg::Geode;
+    mSkyGeode->addDrawable(new osg::ShapeDrawable(
+            new osg::Sphere(osg::Vec3(), radius)));
+    mSkyGeode->setCullingActive(false);
+    addChild(mSkyGeode);
 }
 
 void SkyBox::setEnvironmentMap( unsigned int unit, osg::Image* posX, osg::Image* negX,

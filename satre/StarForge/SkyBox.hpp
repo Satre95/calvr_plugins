@@ -2,11 +2,12 @@
 
 #include <osg/TextureCubeMap>
 #include <osg/Transform>
-
+#include <osg/ShapeDrawable>
+#include <osg/Geode>
 class SkyBox : public osg::Transform
 {
 public:
-    SkyBox();
+    SkyBox(float radius =  1000.f);
     
     SkyBox( const SkyBox& copy, osg::CopyOp copyop=osg::CopyOp::SHALLOW_COPY )
     : osg::Transform(copy, copyop) {}
@@ -21,4 +22,6 @@ public:
     
 protected:
     virtual ~SkyBox() {}
+
+    osg::ref_ptr<osg::Geode> mSkyGeode = nullptr;
 };
