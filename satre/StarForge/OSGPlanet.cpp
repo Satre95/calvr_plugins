@@ -260,7 +260,6 @@ void OSGPlanet::PreFrame() {
 }
 
 void OSGPlanet::PostFrame() {
-
 }
 
 void OSGPlanet::UpdatePositionDataTexture() {

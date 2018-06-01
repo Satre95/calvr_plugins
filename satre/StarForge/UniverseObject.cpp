@@ -4,7 +4,6 @@
 #include <cvrKernel/Navigation.h>
 #include <cvrKernel/PluginHelper.h>
 #include <osg/TexGen>
-#include <osg/ShapeDrawable>
 #include <osgUtil/Optimizer>
 
 
@@ -54,7 +53,7 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
     mPlanet = new OSGPlanet(numRepulsors, numAttractors, assetsPath);
 
     // Load and create the skybox
-    mSkybox = new SkyBox;
+    mSkybox = new SkyBox(getOrComputeBoundingBox().radius());
     mSkybox->getOrCreateStateSet()->setTextureAttributeAndModes(0, new osg::TexGen);
     std::string skybox = assetsPath + ConfigManager::getEntry("value", "Plugin.StarForge.SkyboxPath",
                                                               "skyboxes/Belawor/"); // Relative to assets path
@@ -65,27 +64,15 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
                                osgDB::readImageFile(skybox + "Front.tga"), osgDB::readImageFile(skybox + "Back.tga")
     );
 
-
-    osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-    auto boundingBox = getOrComputeBoundingBox();
-    geode->addDrawable(new osg::ShapeDrawable(
-            new osg::Sphere(osg::Vec3(), boundingBox.radius())));
-    geode->setCullingActive(false);
-    mSkybox->addChild(geode);
-
     addChild(mSkybox);
     addChild(mPlanet->GetGraph());
 
     osgViewer::ViewerBase::Contexts contexts;
-    CVRViewer::instance()->getContexts(contexts);
-    std::cerr << "Got " << contexts.size() << " contexts." << std::endl;
+    cvr::CVRViewer::instance()->getContexts(contexts);
     if(contexts.empty() == false) {
         auto gl_state = contexts.front()->getState();
         gl_state->setUseModelViewAndProjectionUniforms(true);
-        std::cerr << "Using MVP Matrices: " << gl_state->getUseModelViewAndProjectionUniforms() << std::endl;
         gl_state->setUseVertexAttributeAliasing(true);
-        std::cerr << "Using Vertex Attrib Aliasing: " << gl_state->getUseVertexAttributeAliasing() << std::endl;
-
     }
 
 //    osgUtil::Optimizer optimizer;
