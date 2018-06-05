@@ -21,3 +21,5 @@ ascii2bin
 .DS_store
 cmake-build-debug
 cmake-build-release
+build
+cmake-build-*
