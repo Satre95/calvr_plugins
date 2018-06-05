@@ -10,7 +10,7 @@ SkyBox::SkyBox(float radius)
     setCullingActive( false );
     
     osg::StateSet* ss = getOrCreateStateSet();
-    ss->setAttributeAndModes( new osg::Depth(osg::Depth::ALWAYS) );
+    ss->setAttributeAndModes( new osg::Depth(osg::Depth::LESS) );
     ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
     ss->setMode( GL_CULL_FACE, osg::StateAttribute::OFF );
     ss->setRenderBinDetails( 5, "RenderBin" );

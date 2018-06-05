@@ -24,6 +24,7 @@
 #include <cvrKernel/PluginHelper.h>
 #include <cvrKernel/CVRViewer.h>
 #include <cstring>
+#include <osg/Depth>
 
 //int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime);
 osg::Image * CreateImage(int width, int height, int numComponents);
@@ -176,6 +177,7 @@ void OSGPlanet::InitPlanetDrawPipeline() {
 
     // Setup the textures that will hold the particle data
     auto stateset = geode->getOrCreateStateSet();
+    stateset->setAttributeAndModes( new osg::Depth(osg::Depth::LESS));
     auto * counter = dynamic_cast<osgParticle::ConstantRateCounter*>( mParticleEmitter->getCounter());
 
     int texSize = int(std::ceil(fsqrtf(counter->getEstimatedMaxNumOfParticles(mParticleLifeTime)))) + 1; // Err on the side of caution
