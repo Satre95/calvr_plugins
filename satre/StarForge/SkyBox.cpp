@@ -1,5 +1,7 @@
 #include <osg/Depth>
 #include <osgUtil/CullVisitor>
+#include <osgDB/FileUtils>
+#include <cvrConfig/ConfigManager.h>
 #include "SkyBox.hpp"
 
 SkyBox::SkyBox(float radius)
@@ -8,15 +10,33 @@ SkyBox::SkyBox(float radius)
     setCullingActive( false );
     
     osg::StateSet* ss = getOrCreateStateSet();
-    ss->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 1.0f, 1.0f) );
+    ss->setAttributeAndModes( new osg::Depth(osg::Depth::ALWAYS) );
     ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
     ss->setMode( GL_CULL_FACE, osg::StateAttribute::OFF );
     ss->setRenderBinDetails( 5, "RenderBin" );
+    auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
+    auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "skybox.vert"));
+    auto fragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "skybox.frag"));
+    if(!vertexShader) {
+        std::cerr << "ERROR: Unable to load vertex shader in " << shadersPath << std::endl;
+        return;
+    }
+    if(!fragShader) {
+        std::cerr << "ERROR: Unable to load fragment shader in " << shadersPath << std::endl;
+        return;
+    }
+    // Setup the programmable pipeline
+    auto drawProgram = new osg::Program;
+    drawProgram->addShader(vertexShader);
+    drawProgram->addShader(fragShader);
+    ss->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 
     mSkyGeode = new osg::Geode;
     mSkyGeode->addDrawable(new osg::ShapeDrawable(
             new osg::Sphere(osg::Vec3(), radius)));
     mSkyGeode->setCullingActive(false);
+
+
     addChild(mSkyGeode);
 }
 

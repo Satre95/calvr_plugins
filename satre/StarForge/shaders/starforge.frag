@@ -231,24 +231,24 @@ vec3 doMagic(vec3 p) {
 	return 1.1*col*col;
 }
 
-vec3 pattern(in vec3 p) {
+vec3 pattern(in vec3 p, out vec3 q, out vec3 r) {
 	float pLength = length(p);
 	// p.x += 0.15*sin(0.27 * u_time + pLength * 4.1);
 	// p.y += 0.15*cos(0.23 * u_time + pLength * 4.7);
 	// p.x += 0.15*sin(0.21 * u_time + pLength * 4.5);
 	p += u_time / 10.f;
 
-	vec3 q = vec3( fbm(p + vec3(0, 0, 0)),
+	q = vec3( fbm(p + vec3(0, 0, 0)),
 					fbm(p + vec3(5.2f, 1.3f, 0.4f)), 
 					fbm(p + vec3(3.2f, 1.6f, 2.4f))
 		);
 
-	vec3 r = vec3( fbm(p + 4.f  * q + vec3(0, 0, 0)),
+	r = vec3( fbm(p + 4.f  * q + vec3(0, 0, 0)),
 				fbm(p + 4.f * q + vec3(1.7f, 9.2f, 9.4f)), 
 				fbm(p + 4.f * q + vec3(8.3f, 2.8f, 5.4f))
 	);
 
-	return vec3(fbm6(p + 4.f * r));
+	return vec3(fbm10(p + 4.f * r));
 }
 
 void main() {
@@ -280,8 +280,22 @@ void main() {
 
 	// vec3 p = mix(incomingColor, q, age);
 
-	vec3 pattern = pattern(p);
-	OutColor = vec4(pattern, 1.f);
+	vec3 q, r;
+	vec3 pattern = pattern(p, q, r);
+	vec3 color0 = vec3(0.545f, 0.302f, 0.169f);
+	vec3 color1 = vec3(0.612f, 0.702f, 0.761f);
+	vec3 color2 = vec3(0.792f, 0.341f, 0.240f);
+	vec3 color3 = vec3(54.f/255.f, 77.f/255.f, 61.f/255.f);
+
+	vec3 color = mix(color0, color2, length(pattern));
+	color = mix(color, color1, length(r));
+	color = mix(color, color3, pattern.z);
+
+	// color.x += dFdx(q);
+	// color.y += dFdy(q);
+	// color.z += dFdx(r);
+
+	OutColor = vec4(color, 1.f) * 1.4f;
 
 	// OutColor = vec4(q, 1.f);
 	// OutColor = texture(PositionTexture, fs_in.ColorTexCoord);
