@@ -75,8 +75,8 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
         gl_state->setUseVertexAttributeAliasing(true);
     }
 
-//    osgUtil::Optimizer optimizer;
-//    optimizer.optimize(mPlanet->GetGraph());
+    osgUtil::Optimizer optimizer;
+    optimizer.optimize(mPlanet->GetGraph());
 }
 
 UniverseObject::~UniverseObject()
