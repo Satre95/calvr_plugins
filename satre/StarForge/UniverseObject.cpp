@@ -156,7 +156,6 @@ void UniverseObject::PrepareCameraFlightPath() {
 
     osgGA::AnimationPathManipulator * apm = new osgGA::AnimationPathManipulator(path);
     cvr::CVRViewer::instance()->setCameraManipulator(apm);
-    cvr::CVRViewer::instance()-
 //    std::vector<osg::Camera*> cams;
 //    cvr::CVRViewer::instance()->getCameras(cams);
 //    std::cout << "Num cams: " << cams.size() << std::endl;
