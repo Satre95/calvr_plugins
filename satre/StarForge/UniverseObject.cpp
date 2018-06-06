@@ -5,7 +5,9 @@
 #include <cvrKernel/PluginHelper.h>
 #include <osg/TexGen>
 #include <osgUtil/Optimizer>
-
+#include <osg/AnimationPath>
+#include <osgGA/AnimationPathManipulator>
+#include <osgViewer/ViewerBase>
 
 #include "GlobalParameters.hpp"
 
@@ -75,6 +77,8 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
         gl_state->setUseVertexAttributeAliasing(true);
     }
 
+    PrepareCameraFlightPath();
+
     osgUtil::Optimizer optimizer;
     optimizer.optimize(mPlanet->GetGraph());
 }
@@ -129,4 +133,32 @@ void UniverseObject::PostFrame() {
         mNumParticlesItem->setText(ss.str());
 
     }
+}
+void UniverseObject::PrepareCameraFlightPath() {
+    osg::AnimationPath * path = new osg::AnimationPath;
+    path->setLoopMode(osg::AnimationPath::SWING);
+
+    {
+        osg::AnimationPath::ControlPoint cp;
+        cp.setPosition(osg::Vec3d(0.0, -2.0 * params::gPlanetRadius, 0.0));
+        path->insert(1.0, cp);
+    }
+    {
+        osg::AnimationPath::ControlPoint cp;
+        cp.setPosition(osg::Vec3d(-2.0 * params::gPlanetRadius, 0.0, 0.0));
+        path->insert(5.0, cp);
+    }
+    {
+        osg::AnimationPath::ControlPoint cp;
+        cp.setPosition(osg::Vec3d(0.0, 0.0, -2.0 * params::gPlanetRadius));
+        path->insert(9.0, cp);
+    }
+
+    osgGA::AnimationPathManipulator * apm = new osgGA::AnimationPathManipulator(path);
+    cvr::CVRViewer::instance()->setCameraManipulator(apm);
+    cvr::CVRViewer::instance()-
+//    std::vector<osg::Camera*> cams;
+//    cvr::CVRViewer::instance()->getCameras(cams);
+//    std::cout << "Num cams: " << cams.size() << std::endl;
+
 }

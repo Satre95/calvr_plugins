@@ -180,7 +180,7 @@ void OSGPlanet::InitPlanetDrawPipeline() {
     stateset->setAttributeAndModes( new osg::Depth(osg::Depth::LESS));
     auto * counter = dynamic_cast<osgParticle::ConstantRateCounter*>( mParticleEmitter->getCounter());
 
-    int texSize = int(std::ceil(fsqrtf(counter->getEstimatedMaxNumOfParticles(mParticleLifeTime)))) + 1; // Err on the side of caution
+    int texSize = int(std::ceil(std::sqrt(counter->getEstimatedMaxNumOfParticles(mParticleLifeTime)))) + 1; // Err on the side of caution
     std::cerr << "Initializing textures with width " << texSize << std::endl;
 
     {

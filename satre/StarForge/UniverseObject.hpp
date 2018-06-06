@@ -26,6 +26,9 @@ public:
     void PostFrame();
 
 protected:
+
+    void PrepareCameraFlightPath();
+
     cvr::MenuRangeValue * mScaleRangeSlider = nullptr;
     cvr::MenuRangeValue * mGaussianSigmaRangeSlider = nullptr;
     cvr::MenuRangeValue * mRotationRateRangeSlider = nullptr;
