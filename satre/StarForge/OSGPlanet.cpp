@@ -24,6 +24,7 @@
 #include <cvrKernel/PluginHelper.h>
 #include <cvrKernel/CVRViewer.h>
 #include <cstring>
+#include <mutex>
 #include <osg/Depth>
 
 //int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime);
@@ -39,7 +40,7 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
     mRoot = mRotationNode;
     mLastTransform = mScaleNode;
 
-    InitParticleSystem(numRepulsors, numAttractors, assetsDir, true);
+    InitParticleSystem(numRepulsors, numAttractors, assetsDir, false);
     InitPlanetDrawPipeline();
 }
 
@@ -187,6 +188,7 @@ void OSGPlanet::InitPlanetDrawPipeline() {
         mColorTexture = CreateTexture(texSize, texSize, 4);
         auto image = CreateImage(texSize, texSize, 4);
         mColorTexture->setImage(image);
+        mColorTexture->setUnRefImageDataAfterApply(false);
         stateset->setTextureAttributeAndModes(0, mColorTexture);
     }
 
@@ -194,15 +196,16 @@ void OSGPlanet::InitPlanetDrawPipeline() {
         mAgeVelocityTexture = CreateTexture(texSize, texSize, 4);
         auto image = CreateImage(texSize, texSize, 4);
         mAgeVelocityTexture->setImage(image);
+        mAgeVelocityTexture->setUnRefImageDataAfterApply(false);
         stateset->setTextureAttributeAndModes(1, mAgeVelocityTexture);
     }
 
     {
         mPositionTexture = CreateTexture(texSize, texSize, 4);
         auto image = CreateImage(texSize, texSize, 4);
+        mPositionTexture->setUnRefImageDataAfterApply(false);
         mPositionTexture->setImage(image);
         stateset->setTextureAttributeAndModes(2, mPositionTexture);
-        std::cerr << "Created Pos Texture" << std::endl;
     }
 
     // Load the shaders
@@ -257,8 +260,8 @@ void OSGPlanet::PreFrame() {
     mUTime->set(float(elapsedTime));
 
 //    UpdatePositionDataTexture();
-//    UpdateColorDataTexture();
-//    UpdateAgeVelDataTexture();
+    UpdateColorDataTexture();
+    UpdateAgeVelDataTexture();
 }
 
 void OSGPlanet::PostFrame() {
@@ -348,6 +351,8 @@ void OSGPlanet::UpdateAgeVelDataTexture() {
     std::unordered_map<std::pair<int, int>, float> contribs;
 
     int numParticles = mSystem->numParticles();
+
+    std::mutex contribsMutex;
 #pragma omp parallel for
     for (int i = 0; i < numParticles; ++i) {
         // Get a particle and convert its pos into spherical coords.
@@ -367,10 +372,14 @@ void OSGPlanet::UpdateAgeVelDataTexture() {
         data[index + 1] = vel.y();
         data[index + 2] = vel.z();
         data[index + 3] = float(age);
-        if(contribs.find(std::make_pair(x, y)) == contribs.end())
-            contribs.insert(std::make_pair(std::make_pair(x, y), 1.f));
-        else
-            contribs.at(std::make_pair(x, y)) += 1.f;
+
+        {
+            std::lock_guard<std::mutex> lock(contribsMutex);
+            if (contribs.find(std::make_pair(x, y)) == contribs.end())
+                contribs.insert(std::make_pair(std::make_pair(x, y), 1.f));
+            else
+                contribs.at(std::make_pair(x, y)) += 1.f;
+        }
     }
 
     // Average out contributions

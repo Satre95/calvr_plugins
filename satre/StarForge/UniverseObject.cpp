@@ -79,8 +79,8 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
 
     PrepareCameraFlightPath();
 
-    osgUtil::Optimizer optimizer;
-    optimizer.optimize(mPlanet->GetGraph());
+//    osgUtil::Optimizer optimizer;
+//    optimizer.optimize(mPlanet->GetGraph());
 }
 
 UniverseObject::~UniverseObject()
