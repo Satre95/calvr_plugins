@@ -243,37 +243,21 @@ vec3 pattern(in vec3 p, out vec3 q, out vec3 r) {
 					fbm(p + vec3(3.2f, 1.6f, 2.4f))
 		);
 
-	r = vec3( fbm(p + 4.f  * q + vec3(0, 0, 0)),
-				fbm(p + 4.f * q + vec3(1.7f, 9.2f, 9.4f)), 
-				fbm(p + 4.f * q + vec3(8.3f, 2.8f, 5.4f))
+	r = vec3( fbm4(p + 4.f  * q + vec3(0, 0, 0)),
+				fbm4(p + 4.f * q + vec3(1.7f, 9.2f, 9.4f)), 
+				fbm4(p + 4.f * q + vec3(8.3f, 2.8f, 5.4f))
 	);
 
 	return vec3(fbm10(p + 4.f * r));
 }
 
 void main() {
-	vec3 localColor = vec3(0.f);
+
 	float age = texture(AgeVelocityTexture, fs_in.AgeVelTexCoord).w / u_maxParticleAge;
 	vec3 velocity = texture(AgeVelocityTexture, fs_in.AgeVelTexCoord).xyz;
 
-	// float s = 0.f, t = 0.f;
-	// float stepSize = 1.f / float(NUM_STEPS);
-	// for(int x = 0; x < NUM_STEPS; x++) {
-	// 	for(int y = 0; y < NUM_STEPS; y++) {
-	// 		vec3 texColor = texture(ColorTexture, vec2(s, t)).xyz;
-	// 		/// Particle position is same as normal on unit sphere.
-	// 		vec3 particlePos = texture(PositionTexture, vec2(s, t)).xyz;
-	// 		localColor += texColor * Gaussian(dot(particlePos, fs_in.FragPos) - 1, u_gaussianSigma);
-	// 		// localColor += texColor;
-	// 		t += stepSize;
-	// 	}
-
-	// 	s += stepSize;
-	// }
-
-
-	// vec3 p = abs(fs_in.FragPos);
-	vec3 p = fs_in.FragPos;
+	vec3 p = abs(fs_in.FragPos);
+	// vec3 p = fs_in.FragPos;
 
 	// float qLength = length(q);
 	// vec3 incomingColor = texture(ColorTexture, fs_in.ColorTexCoord).xyz;
@@ -282,14 +266,17 @@ void main() {
 
 	vec3 q, r;
 	vec3 pattern = pattern(p, q, r);
-	vec3 color0 = vec3(0.545f, 0.302f, 0.169f);
+  vec3 texColor = texture(ColorTexture, fs_in.ColorTexCoord).xyz;
+	// vec3 color0 = vec3(0.545f, 0.302f, 0.169f);
+  vec3 color0 = vec3(0.5f, 0.23f, 0.115f);
 	vec3 color1 = vec3(0.612f, 0.702f, 0.761f);
 	vec3 color2 = vec3(0.792f, 0.341f, 0.240f);
 	vec3 color3 = vec3(54.f/255.f, 77.f/255.f, 61.f/255.f);
 
-	vec3 color = mix(color0, color2, length(pattern));
+	vec3 color = mix(color0, color1, length(pattern));
 	color = mix(color, color1, length(r));
 	color = mix(color, color3, pattern.z);
+  color *= mix(color, texColor, age);
 
 	// color.x += dFdx(q);
 	// color.y += dFdy(q);
@@ -297,9 +284,7 @@ void main() {
 
 	OutColor = vec4(color, 1.f) * 1.4f;
 
-	// OutColor = vec4(q, 1.f);
-	// OutColor = texture(PositionTexture, fs_in.ColorTexCoord);
-	
+	// OutColor = vec4(q, 1.f);	
 }
 
 float Gaussian(float u, float sigma) {
