@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/vec3.hpp>
+#include <glm/matrix.hpp>
 #include <glm/gtc/constants.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
@@ -57,14 +58,24 @@ inline float fsqrtf(const float & val)
 	return val * y;                        // Return val / sqrt(val) which is sqrt(val)
 }
 
+inline osg::Vec3 GLM2OSG(const glm::vec3 & vec) {
+	return osg::Vec3(vec.x, vec.y, vec.z);
+}
+
+inline glm::vec3 OSG2GLM(const osg::Vec3 & vec) {
+	return glm::vec3(vec.x(), vec.y(), vec.z());
+}
+
 /**
  \brief Converts the given spherical coords to cartesian.
 
  (radius, inclination, azimuth) -> (x, y, z)
 
  \note assumes 0 ≤ inclination ≤ π
+ \note Return value is in OSG coordinate system.
 */
 inline glm::vec3 ConvertSphericalToCartesian(const glm::vec3 & spCoords) {
+
 	const auto & r = spCoords.x;            //dist
 	const auto & theta = spCoords.y;        //elevation
 	const auto & phi = spCoords.z;          //azimuth
@@ -82,11 +93,20 @@ inline glm::vec3 ConvertSphericalToCartesian(const glm::vec3 & spCoords) {
  (x, y, z) -> (radius, inclination, azimuth)
 
  \note assumes 0 ≤ inclination ≤ π
+ \note assumes that incoming coordinates are in OSG's coordinate system.
  */
 inline osg::Vec3 ConvertCartesianToSpherical(const osg::Vec3 & cartCoords) {
-	const auto & x = cartCoords.x();
-	const auto & y = cartCoords.y();
-	const auto & z = cartCoords.z();
+	static const glm::mat3 M_t = glm::transpose(glm::mat3(
+			glm::vec3(1.f, 0.f, 0.f),
+			glm::vec3(0.f, 0.f, 1.f),
+			glm::vec3(0.f, -1.f, 0.f))
+	);
+	// Convert to OpenGL right handed coordinate system.
+	auto alpha = M_t * OSG2GLM(cartCoords);
+
+	const auto & x = alpha.x;
+	const auto & y = alpha.y;
+	const auto & z = alpha.z;
 
 	float r = std::sqrt(x * x + y * y + z * z);
 	return osg::Vec3(r,
@@ -103,15 +123,25 @@ inline osg::Vec3 ConvertCartesianToSpherical(const osg::Vec3 & cartCoords) {
  \note assumes 0 ≤ inclination ≤ π
 */
 inline osg::Vec3 ConvertSphericalToCartesian(const osg::Vec3 & spCoords) {
+    static const glm::mat3 M_t_inverse = glm::inverse(glm::transpose(glm::mat3(
+            glm::vec3(1.f, 0.f, 0.f),
+            glm::vec3(0.f, 0.f, 1.f),
+            glm::vec3(0.f, -1.f, 0.f))
+    ));
+
 	const auto & r = spCoords.x();            //dist
 	const auto & theta = spCoords.y();        //elevation
 	const auto & phi = spCoords.z();          //azimuth
 
-	return osg::Vec3(
+    // Result in OpenGL coordinate system.
+	glm::vec3 temp(
 			r * std::sin(phi) * std::cos(theta),
 			r * std::sin(phi) * std::sin(theta),
 			r * std::cos(phi)
 	);
+
+	// Convert back to OSG coordinate system before returning.
+	return GLM2OSG(M_t_inverse * temp);
 }
 
 /**
@@ -185,14 +215,6 @@ inline glm::vec3 ProjectVectorOnPlane(const glm::vec3 & vec, const glm::vec3 & n
 template <class T>
 T MapToRange(const T & val, const T & inputMin, const T & inputMax, const T & outputMin, const T & outputMax) {
     return ((val - inputMin) / (inputMax - inputMin) * (outputMax - outputMin) + outputMin);
-}
-
-inline osg::Vec3 GLM2OSG(const glm::vec3 & vec) {
-	return osg::Vec3(vec.x, vec.y, vec.z);
-}
-
-inline glm::vec3 OSG2GLM(const osg::Vec3 & vec) {
-	return glm::vec3(vec.x(), vec.y(), vec.z());
 }
 
 // From boost hash_combine
