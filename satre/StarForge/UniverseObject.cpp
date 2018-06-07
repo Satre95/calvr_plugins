@@ -50,14 +50,14 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
     std::cout << "Num Repulsors: " << numRepulsors << std::endl;
     std::cout << "Num Attractors: " << numAttractors << std::endl;
 
-    std::string assetsPath = ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath",
+    mAssetsPath = ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath",
                                                      "/home/satre/Developer/data/plugins/StarForge/");
-    mPlanet = new OSGPlanet(numRepulsors, numAttractors, assetsPath);
+    mPlanet = new OSGPlanet(numRepulsors, numAttractors, mAssetsPath);
 
     // Load and create the skybox
     mSkybox = new SkyBox(getOrComputeBoundingBox().radius());
     mSkybox->getOrCreateStateSet()->setTextureAttributeAndModes(0, new osg::TexGen);
-    std::string skybox = assetsPath + ConfigManager::getEntry("value", "Plugin.StarForge.SkyboxPath",
+    std::string skybox = mAssetsPath + ConfigManager::getEntry("value", "Plugin.StarForge.SkyboxPath",
                                                               "skyboxes/Belawor/"); // Relative to assets path
 
     mSkybox->setEnvironmentMap(0,
@@ -78,7 +78,7 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
     }
 
     PrepareCameraFlightPath();
-
+    SetupSound();
 //    osgUtil::Optimizer optimizer;
 //    optimizer.optimize(mPlanet->GetGraph());
 }
@@ -91,6 +91,12 @@ UniverseObject::~UniverseObject()
 	delete mPlanet;
     delete mFrameTimeItem;
     delete mNumParticlesItem;
+
+    mAudioTrack.stop();
+
+    if(!oasclient::ClientInterface::shutdown()) {
+        std::cerr << "ERROR: Shutdown of connecation with OAS failed!" << std::endl;
+    }
 }
 
 void UniverseObject::menuCallback(MenuItem * item)
@@ -160,4 +166,35 @@ void UniverseObject::PrepareCameraFlightPath() {
 //    cvr::CVRViewer::instance()->getCameras(cams);
 //    std::cout << "Num cams: " << cams.size() << std::endl;
 
+}
+
+void UniverseObject::SetupSound() {
+   auto serverIP = ConfigManager::getEntry("ip", "Plugin.StarForge.OAS", "127.0.0.1");
+   auto serverPort = ConfigManager::getInt("port", "Plugin.StarForge.OAS", 12345);
+   auto soundFilepath = ConfigManager::getEntry("value", "Plugin.StarForge.AudioTrack", "sounds/AudioTrack.wav");
+
+   if(!oasclient::ClientInterface::initialize(serverIP, serverPort)) {
+       std::cerr << "ERROR: UNable to connect to OAS server at IP: " << serverIP << " and port: " << serverPort << std::endl;
+       return;
+   }
+
+   std::cerr << "Sound path: " << mAssetsPath + soundFilepath << std::endl;
+   mAudioTrack.initialize(mAssetsPath + soundFilepath);
+   if(!mAudioTrack.isValid()) {
+       std::cerr << "ERROR: Unable to create sound specified by \'" << soundFilepath << "\'" << std::endl;
+       return;
+   }
+
+    // Set the listener's orientation so that it is looking down the positive Y axis,
+    // and the "up" direction is in the positive Z axis. This means that the listener is
+    // placed on the X-Y plane, with "up" being positive Z.
+    oasclient::Listener::getInstance().setOrientation(0, 1, 0,   0, 0, 1);
+
+    // Place the sound 3 units directly in front of the listener
+    mAudioTrack.setPosition(0, 3, 0);
+
+    // No direction associated with the sound
+    mAudioTrack.setDirection(0, 0, 0);
+    mAudioTrack.setLoop(true);
+    mAudioTrack.play();
 }

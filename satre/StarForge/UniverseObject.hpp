@@ -9,7 +9,7 @@
 #include <osgDB/ReadFile>
 #include <osgDB/FileUtils>
 #include <cvrMenu/MenuText.h>
-
+#include <OAS/OASClient.h>
 #include "SkyBox.hpp"
 
 
@@ -28,6 +28,7 @@ public:
 protected:
 
     void PrepareCameraFlightPath();
+    void SetupSound();
 
     cvr::MenuRangeValue * mScaleRangeSlider = nullptr;
     cvr::MenuRangeValue * mGaussianSigmaRangeSlider = nullptr;
@@ -39,4 +40,6 @@ protected:
 
     OSGPlanet * mPlanet = nullptr;
     osg::ref_ptr<SkyBox> mSkybox = nullptr;
+    oasclient::Sound mAudioTrack;
+    std::string mAssetsPath;
 };
