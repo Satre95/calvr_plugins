@@ -12,7 +12,7 @@ uniform float u_maxParticleAge;
 uniform float u_gaussianSigma = 30.f;
 uniform vec2 u_resolution; // Viewport resolution in pixels
 uniform float u_time;
-
+uniform float u_fadeTime;
 //---------------------------------------------------------
 in VS_OUT {
 	vec4 FragColor;
@@ -28,6 +28,7 @@ out vec4 OutColor;
 const mat3 m = mat3( 0.80, 0.60, 0.4, 0.40, 0.80, 0.60, 0.60, 0.40, 0.80);
 
 float Gaussian(float u, float sigma);
+vec4 FadeInOut(vec4 colorIn);
 
 //---------------------------------------------------------
 vec3 mod289(vec3 x) {
@@ -282,8 +283,8 @@ void main() {
 	// color.y += dFdy(q);
 	// color.z += dFdx(r);
 
-	OutColor = vec4(color, 1.f) * 1.4f;
-
+	OutColor = FadeInOut(vec4(color * 1.4f, 1.f));
+  // OutColor = vec4(color, 1.f);
 	// OutColor = vec4(q, 1.f);	
 }
 
@@ -291,4 +292,9 @@ float Gaussian(float u, float sigma) {
 	float term1 = inversesqrt(2.f * PI) * (1.f / sigma);
 	float term2 = exp(-(u * u) / (2.f * sigma * sigma));
 	return term1 * term2;
+}
+
+vec4 FadeInOut(vec4 colorIn) {
+  vec4 fadeTint = smoothstep(vec4(0.f), vec4(1.f), vec4(u_time/ u_fadeTime));
+  return fadeTint * colorIn;
 }

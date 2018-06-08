@@ -11,6 +11,8 @@ public:
     
     SkyBox( const SkyBox& copy, osg::CopyOp copyop=osg::CopyOp::SHALLOW_COPY )
     : osg::Transform(copy, copyop) {}
+
+    void PreFrame(float runningTime);
     
     META_Node( osg, SkyBox );
     

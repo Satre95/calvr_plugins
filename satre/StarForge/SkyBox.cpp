@@ -3,7 +3,7 @@
 #include <osgDB/FileUtils>
 #include <cvrConfig/ConfigManager.h>
 #include "SkyBox.hpp"
-
+#include <osg/BlendFunc>
 SkyBox::SkyBox(float radius)
 {
     setReferenceFrame( osg::Transform::ABSOLUTE_RF );
@@ -13,7 +13,18 @@ SkyBox::SkyBox(float radius)
     ss->setAttributeAndModes( new osg::Depth(osg::Depth::LESS) );
     ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
     ss->setMode( GL_CULL_FACE, osg::StateAttribute::OFF );
-    ss->setRenderBinDetails( 5, "RenderBin" );
+    ss->setAttributeAndModes(new osg::BlendFunc);
+    ss->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+    auto uTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_time");
+    ss->addUniform(uTime);
+    uTime->set(0.f);
+    // Get the fade in out time from the config
+    float fadeTime = cvr::ConfigManager::getFloat("value", "Plugin.StarForge.FadeTime", 4.f);
+    auto uFadeTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeTime");
+    ss->addUniform(uFadeTime);
+    uFadeTime->set(fadeTime);
+
+//    ss->setRenderBinDetails( 5, "RenderBin" );
     auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
     auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "skybox.vert"));
     auto fragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "skybox.frag"));
@@ -63,11 +74,15 @@ void SkyBox::setEnvironmentMap( unsigned int unit, osg::Image* posX, osg::Image*
     }
 }
 
+void SkyBox::PreFrame(float runningTime) {
+    getOrCreateStateSet()->getUniform("u_time")->set(runningTime);
+}
+
 bool SkyBox::computeLocalToWorldMatrix( osg::Matrix& matrix, osg::NodeVisitor* nv ) const
 {
     if ( nv && nv->getVisitorType()==osg::NodeVisitor::CULL_VISITOR )
     {
-        osgUtil::CullVisitor* cv = static_cast<osgUtil::CullVisitor*>( nv );
+        auto * cv = dynamic_cast<osgUtil::CullVisitor*>( nv );
         matrix.preMult( osg::Matrix::translate(cv->getEyeLocal()) );
         return true;
     }
@@ -79,7 +94,7 @@ bool SkyBox::computeWorldToLocalMatrix( osg::Matrix& matrix, osg::NodeVisitor* n
 {
     if ( nv && nv->getVisitorType()==osg::NodeVisitor::CULL_VISITOR )
     {
-        osgUtil::CullVisitor* cv = static_cast<osgUtil::CullVisitor*>( nv );
+        auto * cv = dynamic_cast<osgUtil::CullVisitor*>( nv );
         matrix.postMult( osg::Matrix::translate(-cv->getEyeLocal()) );
         return true;
     }

@@ -6,7 +6,7 @@
 #include "math_helper.hpp"
 #include "SpherePlacer.hpp"
 #include "PositionCorrectionOperator.hpp"
-
+#include "FadeInOutCallback.hpp"
 #include <osg/Geometry>
 #include <osg/Geode>
 #include <osg/Point>
@@ -18,6 +18,7 @@
 #include <osg/io_utils>
 #include <osg/Matrix>
 #include <osgParticle/LinearInterpolator>
+#include <osg/BlendFunc>
 #include <unordered_map>
 
 #include <cvrConfig/ConfigManager.h>
@@ -26,6 +27,7 @@
 #include <cstring>
 #include <mutex>
 #include <osg/Depth>
+#include <osg/Material>
 
 //int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime);
 osg::Image * CreateImage(int width, int height, int numComponents);
@@ -42,6 +44,7 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 
     InitParticleSystem(numRepulsors, numAttractors, assetsDir, false);
     InitPlanetDrawPipeline();
+
 }
 
 OSGPlanet::~OSGPlanet() = default;
@@ -245,26 +248,41 @@ void OSGPlanet::InitPlanetDrawPipeline() {
     stateset->addUniform(mUTime);
     mUTime->set(0.f);
 
+    // Get the fade in out time from the config
+    float fadeTime = cvr::ConfigManager::getFloat("value", "Plugin.StarForge.FadeTime", 4.f);
+    auto uFadeTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeTime");
+    stateset->addUniform(uFadeTime);
+    uFadeTime->set(fadeTime);
+
+//    osg::ref_ptr<osg::Material> material = new osg::Material;
+//    material->setAmbient( osg::Material::FRONT_AND_BACK, osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f) );
+//    material->setDiffuse( osg::Material::FRONT_AND_BACK, osg::Vec4(1.0f, 1.0f, 1.0f, 1.0f) );
+//    stateset->setAttributeAndModes(material.get(), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+
+    stateset->setAttributeAndModes(new osg::BlendFunc);
+    stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+//
+//    geode->addCullCallback(new FadeInOutCallback(material.get()));
+
     // Add it to the scene graph
     mLastTransform->addChild(geode);
 }
 
 
-void OSGPlanet::PreFrame() {
-    auto elapsedTime = cvr::PluginHelper::getProgramDuration();
-    auto rotation = std::fmod(mRotationRate * elapsedTime, 2.0 * osg::PI);
+void OSGPlanet::PreFrame(float runningTime) {
+    auto rotation = std::fmod(mRotationRate * runningTime, 2.0 * osg::PI);
     osg::Matrix rotMat;
     rotMat.makeRotate(rotation, osg::Vec3(0.f, 0.f, 1.f));
     mRotationNode->setMatrix(rotMat);
 
-    mUTime->set(float(elapsedTime));
+    mUTime->set(float(runningTime));
 
 //    UpdatePositionDataTexture();
     UpdateColorDataTexture();
     UpdateAgeVelDataTexture();
 }
 
-void OSGPlanet::PostFrame() {
+void OSGPlanet::PostFrame(float runningTime) {
 }
 
 void OSGPlanet::UpdatePositionDataTexture() {

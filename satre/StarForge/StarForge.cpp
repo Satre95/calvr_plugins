@@ -35,11 +35,13 @@ bool StarForge::init() {
 }
 
 void StarForge::preFrame() {
-    mUniverse->PreFrame();
+    auto elapsedTime = cvr::PluginHelper::getProgramDuration();
+    mUniverse->PreFrame(float(elapsedTime));
 }
 
 void StarForge::postFrame() {
-    mUniverse->PostFrame();
+    auto elapsedTime = cvr::PluginHelper::getProgramDuration();
+    mUniverse->PostFrame(float(elapsedTime));
 }
 
 bool StarForge::processEvent(cvr::InteractionEvent * event) {

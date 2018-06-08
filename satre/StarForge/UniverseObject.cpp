@@ -121,12 +121,13 @@ void UniverseObject::setScale(float scale) {
 
 }
 
-void UniverseObject::PreFrame() {
-    mPlanet->PreFrame();
+void UniverseObject::PreFrame(float runningTime) {
+    mPlanet->PreFrame(runningTime);
+    mSkybox->PreFrame(runningTime);
 }
 
-void UniverseObject::PostFrame() {
-    mPlanet->PostFrame();
+void UniverseObject::PostFrame(float runningTime) {
+    mPlanet->PostFrame(runningTime);
     {
         std::stringstream ss;
         ss << "Last Frame timing: " << PluginHelper::getLastFrameDuration() * 1000.f << " ms";

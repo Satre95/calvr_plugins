@@ -70,3 +70,4 @@ vec3 ConvertCartesianToSpherical(vec3 cartCoords) {
 float MapToRange(float val, float inputMin, float inputMax, float outputMin, float outputMax) {
     return ((val - inputMin) / (inputMax - inputMin) * (outputMax - outputMin) + outputMin);
 }
+

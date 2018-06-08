@@ -22,8 +22,8 @@ public:
 	virtual void menuCallback(cvr::MenuItem * item) override ;
     void setScale(float scale);
 
-    void PreFrame();
-    void PostFrame();
+    void PreFrame(float runningTime);
+    void PostFrame(float runningTime);
 
 protected:
 

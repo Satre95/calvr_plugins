@@ -20,8 +20,8 @@ public:
 	void SetScale(osg::Matrix & mat) { mScaleNode->setMatrix(mat); }
 	osg::Group * GetGraph() const { return mRoot; }
 
-	void PreFrame();
-	void PostFrame();
+	void PreFrame(float runningTime);
+	void PostFrame(float runningTime);
 
 	int GetNumParticles() const { return mSystem->numParticles();}
 	void SetShaderGaussianSigma(float sigma) {mUGaussianSigma->set(sigma); }
