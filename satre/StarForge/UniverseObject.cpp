@@ -191,8 +191,9 @@ void UniverseObject::SetupSound() {
     // placed on the X-Y plane, with "up" being positive Z.
     oasclient::Listener::getInstance().setOrientation(0, 1, 0,   0, 0, 1);
 
-    // Place the sound 3 units directly in front of the listener
-    mAudioTrack.setPosition(0, 3, 0);
+    // Place the sound 3 units directly abobe of the listener
+    mAudioTrack.setPosition(0, 0, 3);
+    mAudioTrack.setGain(1.5f);
 
     // No direction associated with the sound
     mAudioTrack.setDirection(0, 0, 0);

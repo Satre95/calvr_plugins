@@ -6,7 +6,6 @@
 #include "math_helper.hpp"
 #include "SpherePlacer.hpp"
 #include "PositionCorrectionOperator.hpp"
-#include "FadeInOutCallback.hpp"
 #include <osg/Geometry>
 #include <osg/Geode>
 #include <osg/Point>
