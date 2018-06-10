@@ -18,6 +18,7 @@
 #include <osg/Matrix>
 #include <osgParticle/LinearInterpolator>
 #include <osg/BlendFunc>
+#include <osg/PositionAttitudeTransform>
 #include <unordered_map>
 
 #include <cvrConfig/ConfigManager.h>
@@ -41,16 +42,28 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
     mRoot = mRotationNode;
     mLastTransform = mScaleNode;
 
-    InitParticleSystem(numRepulsors, numAttractors, assetsDir, false);
-    InitPlanetDrawPipeline();
+    auto partSystemRoot = InitParticleSystem(numRepulsors, numAttractors, assetsDir, false);
+    auto planetRoot = InitPlanetDrawPipeline();
+
+    // Get the phase 1 animation
+    auto animPath1 = CreateAnimationPhase1();
+    // Create a node to move the things around.
+    auto xForm = new osg::PositionAttitudeTransform;
+    xForm->setUpdateCallback(new osg::AnimationPathCallback(animPath1));
+    mLastTransform->addChild(xForm);
+
+    xForm->addChild(planetRoot);
+    xForm->addChild(partSystemRoot);
+
 
 }
 
 OSGPlanet::~OSGPlanet() = default;
 
-void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir, bool drawSystem) {
+osg::Group* OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir, bool drawSystem) {
 
     auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
+    auto systemRoot = new osg::Group;
 
     /// Init the particle system
     mSystem = new osgParticle::ParticleSystem;
@@ -88,14 +101,14 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
     mParticleEmitter->setShooter(shooter);
 
     // Add the shooter to the scene graph.
-    mLastTransform->addChild(mParticleEmitter);
+    systemRoot->addChild(mParticleEmitter);
 
     // Create a program to control the post-spawning behavior of the particles
     auto * program = new osgParticle::ModularProgram;
     program->setParticleSystem(mSystem);
     program->addOperator(new PositionCorrectionOperator);
     // Add the program to the scene graph
-    mLastTransform->addChild(program);
+    systemRoot->addChild(program);
 
     osg::ref_ptr<osg::Vec3Array> vortonsVertices = new osg::Vec3Array;
     osg::ref_ptr<osg::Vec4Array> vortonsColors = new osg::Vec4Array;
@@ -145,7 +158,7 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
         drawProgram->addShader(fragShader);
         vortonsGeode->getOrCreateStateSet()->setAttribute(drawProgram,
                                                           osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-        mLastTransform->addChild(vortonsGeode);
+        systemRoot->addChild(vortonsGeode);
 
         // Create a drawable target for the particle system
         auto geode = new osg::Geode;
@@ -153,17 +166,20 @@ void OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, st
         geode->addDrawable(mSystem);
         // Recycle the vortons geode stateset for particle debug draw.
         geode->setStateSet(vortonsGeode->getOrCreateStateSet());
-        mLastTransform->addChild(geode);
+        systemRoot->addChild(geode);
     }
 
     // Create a particle system updater
     auto psUpdater = new osgParticle::ParticleSystemUpdater;
     psUpdater->addParticleSystem(mSystem);
 
-    mLastTransform->addChild(psUpdater);
+    systemRoot->addChild(psUpdater);
+    return systemRoot;
 }
 
-void OSGPlanet::InitPlanetDrawPipeline() {
+osg::Group* OSGPlanet::InitPlanetDrawPipeline() {
+    auto planetRoot = new osg::Group;
+
     // Create the sphere
     mPlanetSphere = new osg::ShapeDrawable(
             new osg::Sphere(GLM2OSG(params::gPlanetCenter), params::gPlanetRadius));
@@ -217,11 +233,11 @@ void OSGPlanet::InitPlanetDrawPipeline() {
 
     if(!vertexShader) {
         std::cerr << "ERROR: Unable to load vertex shader in " << shadersPath << std::endl;
-        return;
+        return nullptr;
     }
     if(!fragShader) {
         std::cerr << "ERROR: Unable to load fragment shader in " << shadersPath << std::endl;
-        return;
+        return nullptr;
     }
 
     // Setup the programmable pipeline
@@ -264,15 +280,16 @@ void OSGPlanet::InitPlanetDrawPipeline() {
 //    geode->addCullCallback(new FadeInOutCallback(material.get()));
 
     // Add it to the scene graph
-    mLastTransform->addChild(geode);
+    planetRoot->addChild(geode);
+    return planetRoot;
 }
 
 
 void OSGPlanet::PreFrame(float runningTime) {
-    auto rotation = std::fmod(mRotationRate * runningTime, 2.0 * osg::PI);
-    osg::Matrix rotMat;
-    rotMat.makeRotate(rotation, osg::Vec3(0.f, 0.f, 1.f));
-    mRotationNode->setMatrix(rotMat);
+//    auto rotation = std::fmod(mRotationRate * runningTime, 2.0 * osg::PI);
+//    osg::Matrix rotMat;
+//    rotMat.makeRotate(rotation, osg::Vec3(0.f, 0.f, 1.f));
+//    mRotationNode->setMatrix(rotMat);
 
     mUTime->set(float(runningTime));
 
@@ -416,6 +433,37 @@ void OSGPlanet::UpdateAgeVelDataTexture() {
 
     image->dirty();
 }
+
+/**
+ * Planet starts far away and we gradually get closer. Once it fills our vision, ...
+ * @return
+ */
+osg::AnimationPath * OSGPlanet::CreateAnimationPhase1() {
+    auto path = new osg::AnimationPath;
+    path->setLoopMode(osg::AnimationPath::SWING);
+
+    osg::Vec3 eye, center, up;
+    cvr::CVRViewer::instance()->getCamera()->getViewMatrixAsLookAt(eye, center, up);
+
+    std::cerr << "Eye: " << eye << std::endl;
+    std::cerr << "Center: " << center << std::endl;
+    std::cerr << "Up: " << up << std::endl;
+
+    auto numPoints = cvr::ConfigManager::getInt("value", "Plugin.StarForge.AnimationPath1.NumPoints", 0);
+    for (int i = 1; i <= numPoints; ++i) {
+        std::string tag = "Plugin.StarForge.AnimationPath1.Point" + std::to_string(i);
+        auto point = cvr::ConfigManager::getVec4(tag);
+        osg::AnimationPath::ControlPoint cp;
+        cp.setPosition(osg::Vec3d(point.x(), point.y(), point.z()));
+        path->insert(point.w(), cp);
+    }
+
+    return path;
+}
+
+osg::AnimationPath * OSGPlanet::CreateAnimationPhase2() {}
+
+osg::AnimationPath * OSGPlanet::CreateAnimationPhase3() {}
 
 //int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime) {
 //    int minNumParticles =  static_cast<int>(counter->getMinimumNumberOfParticlesToCreate() * 60.0f * lifetime);

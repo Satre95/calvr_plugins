@@ -44,6 +44,11 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
         addMenuItem(mNumParticlesItem);
     }
 
+    osg::Vec3 universeTranslation = ConfigManager::getVec3("Plugin.StarForge.UniversePosition");
+    mUniverseTransform = new osg::MatrixTransform;
+    osg::Matrix mat;
+    mat.makeTranslate(universeTranslation);
+    mUniverseTransform->setMatrix(mat);
 
     int numRepulsors = ConfigManager::getInt("value", "Plugin.StarForge.NumRepulsors", 10);
     int numAttractors = ConfigManager::getInt("value", "Plugin.StarForge.NumAttractors", 10);
@@ -66,8 +71,9 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
                                osgDB::readImageFile(skybox + "Front.tga"), osgDB::readImageFile(skybox + "Back.tga")
     );
 
-    addChild(mSkybox);
-    addChild(mPlanet->GetGraph());
+    addChild(mUniverseTransform);
+    mUniverseTransform->addChild(mSkybox);
+    mUniverseTransform->addChild(mPlanet->GetGraph());
 
     osgViewer::ViewerBase::Contexts contexts;
     cvr::CVRViewer::instance()->getContexts(contexts);
@@ -77,7 +83,7 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
         gl_state->setUseVertexAttributeAliasing(true);
     }
 
-    PrepareCameraFlightPath();
+//    PrepareCameraFlightPath();
     SetupSound();
 //    osgUtil::Optimizer optimizer;
 //    optimizer.optimize(mPlanet->GetGraph());
@@ -124,6 +130,19 @@ void UniverseObject::setScale(float scale) {
 void UniverseObject::PreFrame(float runningTime) {
     mPlanet->PreFrame(runningTime);
     mSkybox->PreFrame(runningTime);
+
+//    std::cerr<<"<<<<<<<<<<<<<<<<<<<<<<<<<<<<"<< std::endl;
+//    auto mat = cvr::CVRViewer::instance()->getCamera()->getViewMatrix();
+//    auto mat = cvr::SceneManager::instance()->getObjectTransform()->getMatrix();
+//    auto mat = cvr::PluginHelper::getHeadMat();
+//    for (int i = 0; i < 4; i++) {
+//        for (int j = 0; j < 4; j++) {
+//            std::cerr<<mat(i,j)<<" ";
+//        }
+//        std::cerr<<std::endl;
+//    }
+//    std::cerr<<"<<<<<<<<<<<<<<<<<<<<<<<<<<<<"<< std::endl;
+
 }
 
 void UniverseObject::PostFrame(float runningTime) {

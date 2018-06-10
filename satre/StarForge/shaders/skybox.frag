@@ -17,6 +17,6 @@ void main() {
 }
 
 vec4 FadeInOut(vec4 colorIn) {
-  vec4 fadeTint = smoothstep(vec4(0.f), vec4(1.f), vec4(u_time/ u_fadeTime));
+  vec4 fadeTint = vec4(smoothstep(vec3(0.f), vec3(1.f), vec3(u_time/ u_fadeTime)), 1.f);
   return fadeTint * colorIn;
 }

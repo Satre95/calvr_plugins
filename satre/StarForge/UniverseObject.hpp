@@ -40,6 +40,7 @@ protected:
 
     OSGPlanet * mPlanet = nullptr;
     osg::ref_ptr<SkyBox> mSkybox = nullptr;
+    osg::ref_ptr<osg::MatrixTransform> mUniverseTransform = nullptr;
     oasclient::Sound mAudioTrack;
     std::string mAssetsPath;
 };

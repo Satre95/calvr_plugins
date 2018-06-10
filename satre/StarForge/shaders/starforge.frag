@@ -244,12 +244,12 @@ vec3 pattern(in vec3 p, out vec3 q, out vec3 r) {
 					fbm(p + vec3(3.2f, 1.6f, 2.4f))
 		);
 
-	r = vec3( fbm4(p + 4.f  * q + vec3(0, 0, 0)),
-				fbm4(p + 4.f * q + vec3(1.7f, 9.2f, 9.4f)), 
-				fbm4(p + 4.f * q + vec3(8.3f, 2.8f, 5.4f))
+	r = vec3( fbm6(p + 4.f  * q + vec3(0, 0, 0)),
+				fbm6(p + 4.f * q + vec3(1.7f, 9.2f, 9.4f)), 
+				fbm6(p + 4.f * q + vec3(8.3f, 2.8f, 5.4f))
 	);
 
-	return vec3(fbm10(p + 4.f * r));
+	return vec3(sin(fbm(p + 4.f * r)));
 }
 
 void main() {
@@ -257,8 +257,8 @@ void main() {
 	float age = texture(AgeVelocityTexture, fs_in.AgeVelTexCoord).w / u_maxParticleAge;
 	vec3 velocity = texture(AgeVelocityTexture, fs_in.AgeVelTexCoord).xyz;
 
-	vec3 p = abs(fs_in.FragPos);
-	// vec3 p = fs_in.FragPos;
+	// vec3 p = abs(fs_in.FragPos);
+	vec3 p = fs_in.FragPos;
 
 	// float qLength = length(q);
 	// vec3 incomingColor = texture(ColorTexture, fs_in.ColorTexCoord).xyz;
@@ -273,17 +273,20 @@ void main() {
 	vec3 color1 = vec3(0.612f, 0.702f, 0.761f);
 	vec3 color2 = vec3(0.792f, 0.341f, 0.240f);
 	vec3 color3 = vec3(54.f/255.f, 77.f/255.f, 61.f/255.f);
+  // vec3 color4 = vec3(0.85f, 0.4f, 0.64f);
 
 	vec3 color = mix(color0, color1, length(pattern));
 	color = mix(color, color1, length(r));
 	color = mix(color, color3, pattern.z);
-  color *= mix(color, texColor, age);
+  // color = mix(color, color4, pattern.x);
+
+  // color *= mix(color, texColor, age);
 
 	// color.x += dFdx(q);
 	// color.y += dFdy(q);
 	// color.z += dFdx(r);
 
-	OutColor = FadeInOut(vec4(color * 1.4f, 1.f));
+	OutColor = FadeInOut(vec4(color * 1.1, 1.f));
   // OutColor = vec4(color, 1.f);
 	// OutColor = vec4(q, 1.f);	
 }
@@ -295,6 +298,6 @@ float Gaussian(float u, float sigma) {
 }
 
 vec4 FadeInOut(vec4 colorIn) {
-  vec4 fadeTint = smoothstep(vec4(0.f), vec4(1.f), vec4(u_time/ u_fadeTime));
+  vec4 fadeTint = vec4(smoothstep(vec3(0.f), vec3(1.f), vec3(u_time/ u_fadeTime)), 1.f);
   return fadeTint * colorIn;
 }

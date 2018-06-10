@@ -10,6 +10,7 @@
 #include <osg/ShapeDrawable>
 #include <osg/Texture2D>
 #include <osgParticle/ModularEmitter>
+#include <osg/AnimationPath>
 
 /// Wrapper class around an OSG Particle System
 class OSGPlanet
@@ -28,18 +29,23 @@ public:
 	void SetRotationRate(float rate) { mRotationRate = rate; }
 
 private:
-    void InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir, bool drawSystem = false);
-    void InitPlanetDrawPipeline();
+    osg::Group * InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir, bool drawSystem = false);
+    osg::Group * InitPlanetDrawPipeline();
 
     void UpdatePositionDataTexture();
     void UpdateColorDataTexture();
     void UpdateAgeVelDataTexture();
 
+    osg::AnimationPath * CreateAnimationPhase1();
+    osg::AnimationPath * CreateAnimationPhase2();
+    osg::AnimationPath * CreateAnimationPhase3();
+
+
 	osgParticle::ParticleSystem * mSystem = nullptr;
 	osgParticle::ModularEmitter * mParticleEmitter = nullptr;
 	const std::string mAssetsDir;
 
-	/// The root node of the particle system scene graph
+	/// The root node of the planet scene graph
 	osg::ref_ptr<osg::MatrixTransform> mRoot = nullptr;
     osg::ref_ptr<osg::MatrixTransform> mLastTransform = nullptr;
 	osg::ref_ptr<osg::MatrixTransform> mScaleNode = nullptr; // Scale node
@@ -58,5 +64,5 @@ private:
 	osg::Uniform * mUResolution = nullptr;
 
     float mParticleLifeTime = 10.f;
-    float mRotationRate = 0.5f;
+    float mRotationRate = 0.15f;
 };
