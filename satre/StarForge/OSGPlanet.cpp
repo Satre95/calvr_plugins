@@ -189,6 +189,7 @@ osg::Group* OSGPlanet::InitPlanetDrawPipeline() {
     mPlanetSphere->setColorArray(colorArray, osg::Array::BIND_OVERALL);
     mPlanetSphere->setUseVertexBufferObjects(true);
     mPlanetSphere->setUseVertexArrayObject(true);
+    mPlanetSphere->setUseDisplayList(false);
 
     // Create the Geode (Geometry Node)
     auto geode = new osg::Geode;

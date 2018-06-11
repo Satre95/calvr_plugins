@@ -43,8 +43,10 @@ SkyBox::SkyBox(float radius)
     ss->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 
     mSkyGeode = new osg::Geode;
-    mSkyGeode->addDrawable(new osg::ShapeDrawable(
-            new osg::Sphere(osg::Vec3(), radius)));
+    auto sphere = new osg::ShapeDrawable(
+            new osg::Sphere(osg::Vec3(), radius));
+    sphere->setUseDisplayList(false);
+    mSkyGeode->addDrawable(sphere);
     mSkyGeode->setCullingActive(false);
 
 
