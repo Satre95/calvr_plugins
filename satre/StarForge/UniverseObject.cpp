@@ -164,19 +164,6 @@ void UniverseObject::PreFrame(float runningTime) {
     }
 
     mCurrSkybox->PreFrame(runningTime);
-
-//    std::cerr<<"<<<<<<<<<<<<<<<<<<<<<<<<<<<<"<< std::endl;
-//    auto mat = cvr::CVRViewer::instance()->getCamera()->getViewMatrix();
-//    auto mat = cvr::SceneManager::instance()->getObjectTransform()->getMatrix();
-//    auto mat = cvr::PluginHelper::getHeadMat();
-//    for (int i = 0; i < 4; i++) {
-//        for (int j = 0; j < 4; j++) {
-//            std::cerr<<mat(i,j)<<" ";
-//        }
-//        std::cerr<<std::endl;
-//    }
-//    std::cerr<<"<<<<<<<<<<<<<<<<<<<<<<<<<<<<"<< std::endl;
-
 }
 
 void UniverseObject::PostFrame(float runningTime) {

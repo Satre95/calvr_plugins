@@ -132,19 +132,4 @@ void SkyBox::SetupFadeUniforms() {
 
     stateset->addUniform(uFadeInTime); stateset->addUniform(uFadeInDuration);
     stateset->addUniform(uFadeOutTime); stateset->addUniform(uFadeOutDuration);
-    // Get the fade in out time from the config
-//    float fadeInDuration = cvr::ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeInDuration");
-//    auto uFadeInDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeInDuration");
-//    stateset->addUniform(uFadeInDuration);
-//    uFadeInDuration->set(fadeInDuration);
-//
-//    float fadeOutTime = ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeOutTime", 42.f);
-//    auto uFadeOutTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutTime");
-//    stateset->addUniform(uFadeOutTime);
-//    uFadeOutTime->set(fadeOutTime);
-//
-//    float fadeOutDuration = ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeOutDuration", 3.f);
-//    auto uFadeOutDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutDuration");
-//    stateset->addUniform(uFadeOutDuration);
-//    uFadeOutDuration->set(fadeOutDuration);
 }
