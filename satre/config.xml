@@ -88,10 +88,11 @@
 			</AnimationPath>
 			<Colors>
 				<NumColors value="5"/> <!-- If you change this value, make sure to update constant in shader! -->
-				<Color1 x="0.5" y="0.23" z="0.115" />
-				<Color2 x="0.612" y="0.702" z="0.761" />
-				<Color3 x="0.792" y="0.341" z="0.240" />
-				<Color4 x="0.2118" y="0.302" z="0.4392" />
+				<Color1 x="1.0" y="0.1529" z="0.115" />
+				<Color2 x="0.9921" y="0.592" z="0.1216" />
+				<Color3 x="0.9921" y="0.9647" z="0.8901" />
+				<Color4 x="0.7137" y="0.7882" z="0.8549" />
+				<Color5 x="0.8118" y="0.6157" z="0.5098" />
 			</Colors>
 		</Phase2>
 	</StarForge>

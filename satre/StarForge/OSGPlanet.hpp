@@ -36,6 +36,10 @@ private:
     osg::Program * SetupPhase2Program(osg::Geode * geode);
     osg::Program * SetupPhase3Program(osg::Geode * geode);
 
+    void CleanupPhase1(osg::Geode * geode);
+    void CleanupPhase2(osg::Geode * geode);
+    void CleanupPhase3(osg::Geode * geode);
+
     void UpdatePositionDataTexture();
     void UpdateColorDataTexture();
     void UpdateAgeVelDataTexture();
