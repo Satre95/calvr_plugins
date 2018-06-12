@@ -64,12 +64,12 @@ OSGPlanet::~OSGPlanet() = default;
 
 osg::Group* OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir, bool drawSystem) {
 
-    auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
+    auto shadersPath = cvr::ConfigManager::getEntry("value", params::gPluginConfigPrefix + "ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
     auto systemRoot = new osg::Group;
 
     /// Init the particle system
     mSystem = new osgParticle::ParticleSystem;
-    std::string assetsPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath", "/home/satre/Assets/StarForge/");
+    std::string assetsPath = cvr::ConfigManager::getEntry("value", params::gPluginConfigPrefix + "AssetsPath", "/home/satre/Assets/StarForge/");
     mSystem->setDefaultAttributes(assetsPath + "particle.png", false, false);
 
     // Init a template particle, which all future particles will be copies of.
@@ -390,7 +390,7 @@ void OSGPlanet::UpdateAgeVelDataTexture() {
 osg::Program * OSGPlanet::SetupPhase1Program(osg::Geode * geode) {
     auto stateset = geode->getOrCreateStateSet();
     // Load the shaders
-    auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
+    auto shadersPath = cvr::ConfigManager::getEntry("value", params::gPluginConfigPrefix + "ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
     auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge.vert"));
     auto fragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "starforge.frag"));
 
@@ -427,17 +427,17 @@ osg::Program * OSGPlanet::SetupPhase1Program(osg::Geode * geode) {
     mUTime->set(0.f);
 
     // Get the fade in out time from the config
-    float fadeInDuration = cvr::ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeInDuration");
+    float fadeInDuration = cvr::ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeInDuration");
     auto uFadeInDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeInDuration");
     stateset->addUniform(uFadeInDuration);
     uFadeInDuration->set(fadeInDuration);
 
-    float fadeOutTime = ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeOutTime", 42.f);
+    float fadeOutTime = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeOutTime", 42.f);
     auto uFadeOutTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutTime");
     stateset->addUniform(uFadeOutTime);
     uFadeOutTime->set(fadeOutTime);
 
-    float fadeOutDuration = ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeOutDuration", 3.f);
+    float fadeOutDuration = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeOutDuration", 3.f);
     auto uFadeOutDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutDuration");
     stateset->addUniform(uFadeOutDuration);
     uFadeOutDuration->set(fadeOutDuration);
@@ -453,9 +453,9 @@ osg::AnimationPath * OSGPlanet::CreateAnimationPhase1() {
     auto path = new osg::AnimationPath;
     path->setLoopMode(osg::AnimationPath::NO_LOOPING);
 
-    auto numPoints = cvr::ConfigManager::getInt("value", "Plugin.StarForge.AnimationPath1.NumPoints", 0);
+    auto numPoints = cvr::ConfigManager::getInt("value", params::gPluginConfigPrefix + "Phase1.AnimationPath.NumPoints", 0);
     for (int i = 1; i <= numPoints; ++i) {
-        std::string tag = "Plugin.StarForge.AnimationPath1.Point" + std::to_string(i);
+        std::string tag = params::gPluginConfigPrefix + "Phase1.AnimationPath.Point" + std::to_string(i);
         auto point = cvr::ConfigManager::getVec4(tag);
         osg::AnimationPath::ControlPoint cp;
         cp.setPosition(osg::Vec3d(point.x(), point.y(), point.z()));

@@ -14,6 +14,7 @@
 namespace params {
 	glm::vec3 gPlanetCenter = glm::vec3(0.f);
 	float gPlanetRadius = 100.f;
+	std::string gPluginConfigPrefix = "Plugin.StarForge.";
 };
 
 using namespace cvr;
@@ -44,25 +45,25 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
         addMenuItem(mNumParticlesItem);
     }
 
-    osg::Vec3 universeTranslation = ConfigManager::getVec3("Plugin.StarForge.UniversePosition");
+    osg::Vec3 universeTranslation = ConfigManager::getVec3(params::gPluginConfigPrefix + "UniversePosition");
     mUniverseTransform = new osg::MatrixTransform;
     osg::Matrix mat;
     mat.makeTranslate(universeTranslation);
     mUniverseTransform->setMatrix(mat);
 
-    int numRepulsors = ConfigManager::getInt("value", "Plugin.StarForge.NumRepulsors", 10);
-    int numAttractors = ConfigManager::getInt("value", "Plugin.StarForge.NumAttractors", 10);
+    int numRepulsors = ConfigManager::getInt("value", params::gPluginConfigPrefix + "NumRepulsors", 10);
+    int numAttractors = ConfigManager::getInt("value", params::gPluginConfigPrefix + "NumAttractors", 10);
     std::cout << "Num Repulsors: " << numRepulsors << std::endl;
     std::cout << "Num Attractors: " << numAttractors << std::endl;
 
-    mAssetsPath = ConfigManager::getEntry("value", "Plugin.StarForge.AssetsPath",
+    mAssetsPath = ConfigManager::getEntry("value", params::gPluginConfigPrefix + "AssetsPath",
                                                      "/home/satre/Developer/data/plugins/StarForge/");
     mPlanet = new OSGPlanet(numRepulsors, numAttractors, mAssetsPath);
 
     // Load and create the skybox
     mSkybox = new SkyBox(getOrComputeBoundingBox().radius());
     mSkybox->getOrCreateStateSet()->setTextureAttributeAndModes(0, new osg::TexGen);
-    std::string skybox = mAssetsPath + ConfigManager::getEntry("value", "Plugin.StarForge.SkyboxPath",
+    std::string skybox = mAssetsPath + ConfigManager::getEntry("value", params::gPluginConfigPrefix + "SkyboxPath",
                                                               "skyboxes/Belawor/"); // Relative to assets path
 
     mSkybox->setEnvironmentMap(0,
@@ -189,10 +190,10 @@ void UniverseObject::PrepareCameraFlightPath() {
 }
 
 void UniverseObject::SetupSound() {
-   auto serverIP = ConfigManager::getEntry("ip", "Plugin.StarForge.OAS", "127.0.0.1");
-   auto serverPort = ConfigManager::getInt("port", "Plugin.StarForge.OAS", 12345);
-   auto soundFilepath = ConfigManager::getEntry("file", "Plugin.StarForge.AudioTrack", "sounds/AudioTrack.wav");
-   auto gain = ConfigManager::getFloat("gain", "Plugin.StarForge.AudioTrack", 1.f);
+   auto serverIP = ConfigManager::getEntry("ip", params::gPluginConfigPrefix + "OAS", "127.0.0.1");
+   auto serverPort = ConfigManager::getInt("port", params::gPluginConfigPrefix + "OAS", 12345);
+   auto soundFilepath = ConfigManager::getEntry("file", params::gPluginConfigPrefix + "AudioTrack", "sounds/AudioTrack.wav");
+   auto gain = ConfigManager::getFloat("gain", params::gPluginConfigPrefix + "AudioTrack", 1.f);
 
    if(!oasclient::ClientInterface::initialize(serverIP, serverPort)) {
        std::cerr << "ERROR: UNable to connect to OAS server at IP: " << serverIP << " and port: " << serverPort << std::endl;

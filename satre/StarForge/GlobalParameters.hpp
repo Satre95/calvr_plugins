@@ -1,6 +1,6 @@
 #pragma once
 #include <glm/vec3.hpp>
-
+#include <string>
 /// Global parameters controlling the simulation.
 
 namespace params {
@@ -9,4 +9,6 @@ namespace params {
 
 	/// The radius of the planet.
 	extern float gPlanetRadius;
+
+	extern std::string gPluginConfigPrefix;
 };
