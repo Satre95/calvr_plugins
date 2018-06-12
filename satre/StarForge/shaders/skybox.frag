@@ -25,7 +25,7 @@ vec4 FadeIn(vec4 colorIn) {
 }
 
 vec4 FadeOut(vec4 colorIn) {
-	float t = (u_time < u_fadeOutTime) ? 0.f : (u_time - u_fadeOutTime) / u_fadeOutDuration;
-	vec4 fadeTint = vec4(mix(vec3(1.f), vec3(0.f), vec3(t)), 1.f);
-	return fadeTint * colorIn;
+	float t = max((u_time - u_fadeOutTime) / u_fadeOutDuration, 0.f);
+	vec3 col = mix(colorIn.xyz, vec3(0.f), t);
+	return vec4(col, 1.f);
 }
