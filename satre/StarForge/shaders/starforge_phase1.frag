@@ -16,7 +16,7 @@ uniform float u_fadeInDuration;
 uniform float u_fadeOutDuration;
 uniform float u_fadeOutTime; // The time point at which to begin fade out.
 
-uniform vec3 u_colors[4];
+uniform vec3 u_colors[NUM_COLORS];
 
 //---------------------------------------------------------
 in VS_OUT {
@@ -38,6 +38,8 @@ void FadeOut(inout vec4 colorIn);
 float fbm(vec3 p);
 float fbm4(vec3 p);
 float fbm6(vec3 p);
+float fbm8(vec3 p);
+
 float fbm10(vec3 p);
 vec3 mod289(vec3 x);
 vec4 mod289(vec4 x);
@@ -214,6 +216,19 @@ float fbm6( vec3 p )
 		return f/0.96875;
 }
 
+float fbm8( vec3 p ) {
+	float f = 0.0;
+	f += 0.500000*(0.5+0.5*snoise( p )); p = m*p*2.02;
+	f += 0.250000*(0.5+0.5*snoise( p )); p = m*p*2.03;
+	f += 0.125000*(0.5+0.5*snoise( p )); p = m*p*2.01;
+	f += 0.062500*(0.5+0.5*snoise( p )); p = m*p*2.04;
+	f += 0.031250*(0.5+0.5*snoise( p )); p = m*p*2.01;
+	f += 0.015625*(0.5+0.5*snoise( p ));
+	f += 0.0078125*(0.5+0.5*snoise( p ));
+	f += 0.00390625*(0.5+0.5*snoise( p ));
+	return f/0.96875;	
+}
+
 float fbm10( vec3 p )
 {
 		float f = 0.0;
@@ -298,17 +313,17 @@ vec3 pattern(in vec3 p, out vec3 q, out vec3 r) {
 	// p.x += 0.15*sin(0.27 * u_time + pLength * 4.1);
 	// p.y += 0.15*cos(0.23 * u_time + pLength * 4.7);
 	// p.x += 0.15*sin(0.21 * u_time + pLength * 4.5);
-	p += u_time / 10.f;
+	p += u_time / 8.f;
 
-	q = vec3( fbm(p + vec3(0, 0, 0)),
-					fbm(p + vec3(5.2f, 1.3f, 0.4f)), 
-					fbm(p + vec3(3.2f, 1.6f, 2.4f))
+	q = vec3( fbm8(q + vec3(0, 0, 0)),
+		fbm8(q + vec3(5.2f, 1.3f, 0.4f)), 
+		fbm8(q + vec3(3.2f, 1.6f, 2.4f))
 		);
 
-	r = vec3( fbm6(p + 4.f  * q + vec3(0, 0, 0)),
-				fbm6(p + 4.f * q + vec3(1.7f, 9.2f, 9.4f)), 
-				fbm6(p + 4.f * q + vec3(8.3f, 2.8f, 5.4f))
-	);
+	r = vec3( fbm(p + 4.f  * q + vec3(0, 0, 0)),
+		fbm(p + 4.f * q + vec3(1.7f, 9.2f, 9.4f)), 
+		fbm(p + 4.f * q + vec3(8.3f, 2.8f, 5.4f))
+		);
 
 	return vec3(sin(fbm(p + 4.f * r)));
 }
