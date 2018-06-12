@@ -433,6 +433,7 @@ void OSGPlanet::UpdateAgeVelDataTexture() {
 
 osg::Program * OSGPlanet::SetupPhase1Program(osg::Geode * geode) {
     auto stateset = geode->getOrCreateStateSet();
+    stateset->removeUniform("u_colors");
     // Load the shaders
     auto shadersPath = cvr::ConfigManager::getEntry("value", params::gPluginConfigPrefix + "ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
     auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge.vert"));
@@ -452,7 +453,7 @@ osg::Program * OSGPlanet::SetupPhase1Program(osg::Geode * geode) {
     drawProgram->addShader(vertexShader);
     drawProgram->addShader(fragShader);
 
-    // Setup the colors for this phaseE
+    // Setup the colors for this phase
     auto uni = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC3, "u_colors", NUM_COLORS_PHASE_1);
     auto numColors = ConfigManager::getInt("value", params::gPluginConfigPrefix + "Phase1.Colors.NumColors", 0);
     for (int i = 1; i <= numColors; ++i) {
