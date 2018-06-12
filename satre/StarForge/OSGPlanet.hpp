@@ -72,7 +72,7 @@ private:
 	osg::Uniform * mUResolution = nullptr;
 
     float mParticleLifeTime = 10.f;
-    float mRotationRate = 0.15f;
+    float mRotationRate = 0.1f;
 
     osg::Program * mProgram1, *mProgram2, *mProgram3;
 };

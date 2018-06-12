@@ -31,7 +31,7 @@
 
 // These correspond to the macros defined in each respective shader.
 #define NUM_COLORS_PHASE_1 4
-#define NUM_COLORS_PHASE_2 4
+#define NUM_COLORS_PHASE_2 5
 #define NUM_COLORS_PHASE_3 4
 
 
@@ -283,10 +283,10 @@ osg::Group* OSGPlanet::InitPlanetDrawPipeline() {
 
 
 void OSGPlanet::PreFrame(float runningTime) {
-//    auto rotation = std::fmod(mRotationRate * runningTime, 2.0 * osg::PI);
-//    osg::Matrix rotMat;
-//    rotMat.makeRotate(rotation, osg::Vec3(0.f, 0.f, 1.f));
-//    mRotationNode->setMatrix(rotMat);
+    auto rotation = std::fmod(mRotationRate * runningTime, 2.0 * osg::PI);
+    osg::Matrix rotMat;
+    rotMat.makeRotate(rotation, osg::Vec3(0.f, 0.f, 1.f));
+    mRotationNode->setMatrix(rotMat);
 
     mUTime->set(float(runningTime));
 
@@ -486,7 +486,7 @@ osg::Program * OSGPlanet::SetupPhase2Program(osg::Geode * geode) {
     drawProgram->addShader(fragShader);
 
     // Setup the colors for this phase
-    auto uni = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC3, "u_colors", NUM_COLORS_PHASE_1);
+    auto uni = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC3, "u_colors", NUM_COLORS_PHASE_2);
     auto numColors = ConfigManager::getInt("value", params::gPluginConfigPrefix + "Phase2.Colors.NumColors", 0);
     for (int i = 1; i <= numColors; ++i) {
         auto color = ConfigManager::getVec3(params::gPluginConfigPrefix + "Phase2.Colors.Color" + std::to_string(i));
