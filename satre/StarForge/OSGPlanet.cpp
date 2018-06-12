@@ -29,6 +29,8 @@
 #include <osg/Depth>
 #include <osg/Material>
 
+using namespace cvr;
+
 //int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime);
 osg::Image * CreateImage(int width, int height, int numComponents);
 osg::Texture2D * CreateTexture(int width, int height, int numComponents);
@@ -264,12 +266,23 @@ osg::Group* OSGPlanet::InitPlanetDrawPipeline() {
     stateset->addUniform(mUTime);
     mUTime->set(0.f);
 
-    // Get the fade in out time from the config
-    float fadeTime = cvr::ConfigManager::getFloat("value", "Plugin.StarForge.FadeTime", 4.f);
-    auto uFadeTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeTime");
-    stateset->addUniform(uFadeTime);
-    uFadeTime->set(fadeTime);
+    {
+        // Get the fade in out time from the config
+        float fadeInDuration = cvr::ConfigManager::getFloat("value", "Plugin.StarForge.Fades.Phase1.FadeInDuration");
+        auto uFadeInDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeInDuration");
+        stateset->addUniform(uFadeInDuration);
+        uFadeInDuration->set(fadeInDuration);
 
+        float fadeOutTime = ConfigManager::getFloat("value", "Plugin.StarForge.Fades.Phase1.FadeOutTime", 42.f);
+        auto uFadeOutTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutTime");
+        stateset->addUniform(uFadeOutTime);
+        uFadeOutTime->set(fadeOutTime);
+
+        float fadeOutDuration = ConfigManager::getFloat("value", "Plugin.StarForge.Fades.Phase1.FadeOutDuration", 3.f);
+        auto uFadeOutDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutDuration");
+        stateset->addUniform(uFadeOutDuration);
+        uFadeOutDuration->set(fadeOutDuration);
+    }
 //    osg::ref_ptr<osg::Material> material = new osg::Material;
 //    material->setAmbient( osg::Material::FRONT_AND_BACK, osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f) );
 //    material->setDiffuse( osg::Material::FRONT_AND_BACK, osg::Vec4(1.0f, 1.0f, 1.0f, 1.0f) );
@@ -441,14 +454,7 @@ void OSGPlanet::UpdateAgeVelDataTexture() {
  */
 osg::AnimationPath * OSGPlanet::CreateAnimationPhase1() {
     auto path = new osg::AnimationPath;
-    path->setLoopMode(osg::AnimationPath::SWING);
-
-    osg::Vec3 eye, center, up;
-    cvr::CVRViewer::instance()->getCamera()->getViewMatrixAsLookAt(eye, center, up);
-
-    std::cerr << "Eye: " << eye << std::endl;
-    std::cerr << "Center: " << center << std::endl;
-    std::cerr << "Up: " << up << std::endl;
+    path->setLoopMode(osg::AnimationPath::NO_LOOPING);
 
     auto numPoints = cvr::ConfigManager::getInt("value", "Plugin.StarForge.AnimationPath1.NumPoints", 0);
     for (int i = 1; i <= numPoints; ++i) {

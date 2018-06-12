@@ -191,7 +191,8 @@ void UniverseObject::PrepareCameraFlightPath() {
 void UniverseObject::SetupSound() {
    auto serverIP = ConfigManager::getEntry("ip", "Plugin.StarForge.OAS", "127.0.0.1");
    auto serverPort = ConfigManager::getInt("port", "Plugin.StarForge.OAS", 12345);
-   auto soundFilepath = ConfigManager::getEntry("value", "Plugin.StarForge.AudioTrack", "sounds/AudioTrack.wav");
+   auto soundFilepath = ConfigManager::getEntry("file", "Plugin.StarForge.AudioTrack", "sounds/AudioTrack.wav");
+   auto gain = ConfigManager::getFloat("gain", "Plugin.StarForge.AudioTrack", 1.f);
 
    if(!oasclient::ClientInterface::initialize(serverIP, serverPort)) {
        std::cerr << "ERROR: UNable to connect to OAS server at IP: " << serverIP << " and port: " << serverPort << std::endl;
@@ -205,14 +206,17 @@ void UniverseObject::SetupSound() {
        return;
    }
 
+   auto viewerPos = ConfigManager::getVec3("ViewerPosition", osg::Vec3(0.f, -500.f, 0.f));
+   oasclient::Listener::getInstance().setPosition(viewerPos.x(), viewerPos.y(), viewerPos.z());
+
     // Set the listener's orientation so that it is looking down the positive Y axis,
     // and the "up" direction is in the positive Z axis. This means that the listener is
     // placed on the X-Y plane, with "up" being positive Z.
     oasclient::Listener::getInstance().setOrientation(0, 1, 0,   0, 0, 1);
 
     // Place the sound 3 units directly abobe of the listener
-    mAudioTrack.setPosition(0, 0, 3);
-    mAudioTrack.setGain(1.5f);
+    mAudioTrack.setPosition(viewerPos.x(), viewerPos.y() + 1.f, viewerPos.z());
+    mAudioTrack.setGain(gain);
 
     // No direction associated with the sound
     mAudioTrack.setDirection(0, 0, 0);
