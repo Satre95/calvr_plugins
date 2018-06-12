@@ -60,20 +60,32 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
                                                      "/home/satre/Developer/data/plugins/StarForge/");
     mPlanet = new OSGPlanet(numRepulsors, numAttractors, mAssetsPath);
 
-    // Load and create the skybox
-    mSkybox = new SkyBox(getOrComputeBoundingBox().radius());
-    mSkybox->getOrCreateStateSet()->setTextureAttributeAndModes(0, new osg::TexGen);
-    std::string skybox = mAssetsPath + ConfigManager::getEntry("value", params::gPluginConfigPrefix + "SkyboxPath",
-                                                              "skyboxes/Belawor/"); // Relative to assets path
+//    mSkyboxes.reserve(3);
+    mSkyboxes.push_back(new SkyBox(getOrComputeBoundingBox().radius()));
+    mSkyboxes.push_back(new SkyBox(getOrComputeBoundingBox().radius()));
+    mSkyboxes.push_back(new SkyBox(getOrComputeBoundingBox().radius()));
 
-    mSkybox->setEnvironmentMap(0,
-                               osgDB::readImageFile(skybox + "Left.tga"), osgDB::readImageFile(skybox + "Right.tga"),
-                                osgDB::readImageFile(skybox + "Down.tga"), osgDB::readImageFile(skybox + "Up.tga"),
-                               osgDB::readImageFile(skybox + "Front.tga"), osgDB::readImageFile(skybox + "Back.tga")
-    );
+#pragma omp parallel for
+    for (int i = 1; i <= 3; ++i) {
+        auto & skybox = mSkyboxes.at(i - 1);
+        // Load and create the skyboxFiles
+        skybox = new SkyBox(getOrComputeBoundingBox().radius());
+        skybox->getOrCreateStateSet()->setTextureAttributeAndModes(0, new osg::TexGen);
+        std::string skyboxFiles = mAssetsPath + ConfigManager::getEntry("value",
+                params::gPluginConfigPrefix + "Phase" + std::to_string(i) + ".SkyboxPath", "skyboxes/Belawor/"); // Relative to assets path
+
+        skybox->setEnvironmentMap(0,
+                                  osgDB::readImageFile(skyboxFiles + "Left.tga"),
+                                  osgDB::readImageFile(skyboxFiles + "Right.tga"),
+                                  osgDB::readImageFile(skyboxFiles + "Down.tga"), osgDB::readImageFile(skyboxFiles + "Up.tga"),
+                                  osgDB::readImageFile(skyboxFiles + "Front.tga"),
+                                  osgDB::readImageFile(skyboxFiles + "Back.tga")
+        );
+    }
 
     addChild(mUniverseTransform);
-    mUniverseTransform->addChild(mSkybox);
+    mCurrSkybox = mSkyboxes.at(0);
+    mUniverseTransform->addChild(mCurrSkybox);
     mUniverseTransform->addChild(mPlanet->GetGraph());
 
     osgViewer::ViewerBase::Contexts contexts;
@@ -130,7 +142,7 @@ void UniverseObject::setScale(float scale) {
 
 void UniverseObject::PreFrame(float runningTime) {
     mPlanet->PreFrame(runningTime);
-    mSkybox->PreFrame(runningTime);
+    mCurrSkybox->PreFrame(runningTime);
 
 //    std::cerr<<"<<<<<<<<<<<<<<<<<<<<<<<<<<<<"<< std::endl;
 //    auto mat = cvr::CVRViewer::instance()->getCamera()->getViewMatrix();

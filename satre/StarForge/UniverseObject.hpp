@@ -10,6 +10,7 @@
 #include <osgDB/FileUtils>
 #include <cvrMenu/MenuText.h>
 #include <OAS/OASClient.h>
+#include <vector>
 #include "SkyBox.hpp"
 
 
@@ -39,7 +40,8 @@ protected:
 
 
     OSGPlanet * mPlanet = nullptr;
-    osg::ref_ptr<SkyBox> mSkybox = nullptr;
+    std::vector<osg::ref_ptr<SkyBox>> mSkyboxes;
+    osg::ref_ptr<SkyBox> mCurrSkybox;
     osg::ref_ptr<osg::MatrixTransform> mUniverseTransform = nullptr;
     oasclient::Sound mAudioTrack;
     std::string mAssetsPath;

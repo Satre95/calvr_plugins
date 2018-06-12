@@ -50,11 +50,11 @@
 		<NumAttractors value="22" />
 		<AssetsPath value="/home/satre/Assets/StarForge/"/>
 		<ShadersPath value="/home/satre/Developer/CVRPlugins/satre/StarForge/shaders/" />
-		<SkyboxPath value="skyboxes/Belawor/" />
 		<UniversePosition x="0" y="0" z="0" />
 		<OAS ip="127.0.0.1" port="31231" />
 		<AudioTrack file="../../Dropbox/StarForge Planet/final1Mono.wav" gain="1.f"/>
 		<Phase1>
+			<SkyboxPath value="skyboxes/Belawor/" />
 			<Fades>
 				<FadeInTime value="0.0" />
 				<FadeInDuration value="7.2" />
@@ -74,7 +74,9 @@
 				<Color4 x="0.2118" y="0.302" z="0.4392" />
 			</Colors>
 		</Phase1>
+
 		<Phase2>
+			<SkyboxPath value="skyboxes/Utaie/" />
 			<Fades>
 				<FadeInTime value="0.0" />
 				<FadeInDuration value="7.2" />
@@ -95,6 +97,29 @@
 				<Color5 x="0.8118" y="0.6157" z="0.5098" />
 			</Colors>
 		</Phase2>
+
+		<Phase3>
+			<SkyboxPath value="skyboxes/Phipa/" />
+			<Fades>
+				<FadeInTime value="0.0" />
+				<FadeInDuration value="7.2" />
+				<FadeOutTime value="42" />
+				<FadeOutDuration value="3" />
+			</Fades>
+			<AnimationPath>
+				<NumPoints value="2" />
+				<Point1 x="0" y="800" z="0.0" w="0"/> <!-- w is the time -->
+				<Point2 x="0" y="-390" z="0" w="10" />
+			</AnimationPath>
+			<Colors>
+				<NumColors value="5"/> <!-- If you change this value, make sure to update constant in shader! -->
+				<Color1 x="1.0" y="0.1529" z="0.115" />
+				<Color2 x="0.9921" y="0.592" z="0.1216" />
+				<Color3 x="0.9921" y="0.9647" z="0.8901" />
+				<Color4 x="0.7137" y="0.7882" z="0.8549" />
+				<Color5 x="0.8118" y="0.6157" z="0.5098" />
+			</Colors>
+		</Phase3>
 	</StarForge>
 
 </Plugin>
