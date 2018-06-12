@@ -1,7 +1,7 @@
 #version 430 core
 #define NUM_STEPS 80
 #define PI 3.1415926535897932384626433832795
-
+#define NUM_COLORS 4
 
 //---------------------------------------------------------
 layout (binding = 0) uniform sampler2D ColorTexture;
@@ -31,8 +31,8 @@ out vec4 OutColor;
 const mat3 m = mat3( 0.80, 0.60, 0.4, 0.40, 0.80, 0.60, 0.60, 0.40, 0.80);
 
 float Gaussian(float u, float sigma);
-vec4 FadeIn(vec4 colorIn);
-vec4 FadeOut(vec4 colorIn);
+void FadeIn(inout vec4 colorIn);
+void FadeOut(inout vec4 colorIn);
 float fbm(vec3 p);
 float fbm4(vec3 p);
 float fbm6(vec3 p);
@@ -81,8 +81,9 @@ void main() {
 	// color.y += dFdy(q);
 	// color.z += dFdx(r);
 
-	OutColor = FadeIn(vec4(color * 1.1, 1.f));
-	OutColor = FadeOut(OutColor);
+	OutColor = vec4(color * 1.1, 1.f);
+	FadeIn(OutColor);
+	FadeOut(OutColor);
 }
 
 float Gaussian(float u, float sigma) {
@@ -91,16 +92,14 @@ float Gaussian(float u, float sigma) {
 	return term1 * term2;
 }
 
-vec4 FadeIn(vec4 colorIn) {
-	vec3 col = mix(vec3(0.f), colorIn.xyz, min(u_time / u_fadeInDuration, 1.f));
-	return vec4(col.xyz, 1.f);
+void FadeIn(inout vec4 colorIn) {
+	colorIn.xyz = mix(vec3(0.f), colorIn.xyz, min(u_time / u_fadeInDuration, 1.f));
+
 }
 
-
-vec4 FadeOut(vec4 colorIn) {
+void FadeOut(inout vec4 colorIn) {
 	float t = max((u_time - u_fadeOutTime) / u_fadeOutDuration, 0.f);
-	vec3 col = mix(colorIn.xyz, vec3(0.f), t);
-	return vec4(col, 1.f);
+	colorIn.xyz = mix(colorIn.xyz, vec3(0.f), t);
 }
 
 vec3 mod289(vec3 x) {
