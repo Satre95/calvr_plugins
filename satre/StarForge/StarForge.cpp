@@ -35,12 +35,18 @@ bool StarForge::init() {
 }
 
 void StarForge::preFrame() {
-    auto elapsedTime = cvr::PluginHelper::getProgramDuration();
+    // Record the first time this method is called to offset for loading time.
+    if(mFirstPreframeCall) {
+        mFirstPreframeCall = false;
+        mStartTime = cvr::PluginHelper::getProgramDuration();
+        return;
+    }
+    auto elapsedTime = cvr::PluginHelper::getProgramDuration() - mStartTime;
     mUniverse->PreFrame(float(elapsedTime));
 }
 
 void StarForge::postFrame() {
-    auto elapsedTime = cvr::PluginHelper::getProgramDuration();
+    auto elapsedTime = cvr::PluginHelper::getProgramDuration() - mStartTime;
     mUniverse->PostFrame(float(elapsedTime));
 }
 

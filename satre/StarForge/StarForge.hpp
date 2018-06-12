@@ -20,4 +20,7 @@ public:
 
 protected:
 	UniverseObject * mUniverse = nullptr;
+
+	bool mFirstPreframeCall = true;
+	double mStartTime = 0.0;
 };
