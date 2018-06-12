@@ -32,6 +32,10 @@ private:
     osg::Group * InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir, bool drawSystem = false);
     osg::Group * InitPlanetDrawPipeline();
 
+    osg::Program * SetupPhase1Program(osg::Geode * geode);
+    osg::Program * SetupPhase2Program(osg::Geode * geode);
+    osg::Program * SetupPhase3Program(osg::Geode * geode);
+
     void UpdatePositionDataTexture();
     void UpdateColorDataTexture();
     void UpdateAgeVelDataTexture();

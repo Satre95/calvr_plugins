@@ -4,27 +4,29 @@
 #include <cvrConfig/ConfigManager.h>
 #include "SkyBox.hpp"
 #include <osg/BlendFunc>
+
+using namespace cvr;
+
 SkyBox::SkyBox(float radius)
 {
     setReferenceFrame( osg::Transform::ABSOLUTE_RF );
     setCullingActive( false );
     
-    osg::StateSet* ss = getOrCreateStateSet();
-    ss->setAttributeAndModes( new osg::Depth(osg::Depth::LESS) );
-    ss->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
-    ss->setMode( GL_CULL_FACE, osg::StateAttribute::OFF );
-    ss->setAttributeAndModes(new osg::BlendFunc);
-    ss->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+    osg::StateSet* stateset = getOrCreateStateSet();
+    stateset->setAttributeAndModes( new osg::Depth(osg::Depth::LESS) );
+    stateset->setMode( GL_LIGHTING, osg::StateAttribute::OFF );
+    stateset->setMode( GL_CULL_FACE, osg::StateAttribute::OFF );
+    stateset->setAttributeAndModes(new osg::BlendFunc);
+    stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
     auto uTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_time");
-    ss->addUniform(uTime);
+    stateset->addUniform(uTime);
     uTime->set(0.f);
     // Get the fade in out time from the config
     float fadeTime = cvr::ConfigManager::getFloat("value", "Plugin.StarForge.FadeTime", 4.f);
     auto uFadeTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeTime");
-    ss->addUniform(uFadeTime);
+    stateset->addUniform(uFadeTime);
     uFadeTime->set(fadeTime);
 
-//    ss->setRenderBinDetails( 5, "RenderBin" );
     auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
     auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "skybox.vert"));
     auto fragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "skybox.frag"));
@@ -40,7 +42,22 @@ SkyBox::SkyBox(float radius)
     auto drawProgram = new osg::Program;
     drawProgram->addShader(vertexShader);
     drawProgram->addShader(fragShader);
-    ss->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+    stateset->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+    // Get the fade in out time from the config
+    float fadeInDuration = cvr::ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeInDuration");
+    auto uFadeInDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeInDuration");
+    stateset->addUniform(uFadeInDuration);
+    uFadeInDuration->set(fadeInDuration);
+
+    float fadeOutTime = ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeOutTime", 42.f);
+    auto uFadeOutTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutTime");
+    stateset->addUniform(uFadeOutTime);
+    uFadeOutTime->set(fadeOutTime);
+
+    float fadeOutDuration = ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeOutDuration", 3.f);
+    auto uFadeOutDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutDuration");
+    stateset->addUniform(uFadeOutDuration);
+    uFadeOutDuration->set(fadeOutDuration);
 
     mSkyGeode = new osg::Geode;
     auto sphere = new osg::ShapeDrawable(

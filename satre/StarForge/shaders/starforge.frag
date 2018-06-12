@@ -92,14 +92,15 @@ float Gaussian(float u, float sigma) {
 }
 
 vec4 FadeIn(vec4 colorIn) {
-	vec4 fadeTint = vec4(mix(vec3(0.f), vec3(1.f), min(u_time/ u_fadeInDuration, 1.f)), 1.f);
-	return fadeTint * colorIn;
+	vec3 col = mix(vec3(0.f), colorIn.xyz, min(u_time / u_fadeInDuration, 1.f));
+	return vec4(col.xyz, 1.f);
 }
+
 
 vec4 FadeOut(vec4 colorIn) {
 	float t = (u_time < u_fadeOutTime) ? 0.f : (u_time - u_fadeOutTime) / u_fadeOutDuration;
-	vec4 fadeTint = vec4(mix(vec3(1.f), vec3(0.f), vec3(t)), 1.f);
-	return fadeTint * colorIn;
+	vec3 col = mix(colorIn.xyz, vec3(0.f), t);
+	return vec4(col, 1.f);
 }
 
 vec3 mod289(vec3 x) {

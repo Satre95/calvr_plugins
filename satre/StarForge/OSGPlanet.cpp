@@ -204,7 +204,6 @@ osg::Group* OSGPlanet::InitPlanetDrawPipeline() {
 
     int texSize = int(std::ceil(std::sqrt(counter->getEstimatedMaxNumOfParticles(mParticleLifeTime)))) + 1; // Err on the side of caution
     std::cerr << "Initializing textures with width " << texSize << std::endl;
-
     {
         mColorTexture = CreateTexture(texSize, texSize, 4);
         auto image = CreateImage(texSize, texSize, 4);
@@ -228,70 +227,10 @@ osg::Group* OSGPlanet::InitPlanetDrawPipeline() {
         mPositionTexture->setImage(image);
         stateset->setTextureAttributeAndModes(2, mPositionTexture);
     }
-
-    // Load the shaders
-    auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
-    auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge.vert"));
-    auto fragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "starforge.frag"));
-
-    if(!vertexShader) {
-        std::cerr << "ERROR: Unable to load vertex shader in " << shadersPath << std::endl;
-        return nullptr;
-    }
-    if(!fragShader) {
-        std::cerr << "ERROR: Unable to load fragment shader in " << shadersPath << std::endl;
-        return nullptr;
-    }
-
-    // Setup the programmable pipeline
-    auto drawProgram = new osg::Program;
-    drawProgram->addShader(vertexShader);
-    drawProgram->addShader(fragShader);
-    stateset->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-
-    auto uMaxParticleAge = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_maxParticleAge");
-    stateset->addUniform(uMaxParticleAge);
-    uMaxParticleAge->set(float(mSystem->getDefaultParticleTemplate().getLifeTime()));
-
-    mUGaussianSigma = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_gaussianSigma");
-    stateset->addUniform(mUGaussianSigma);
-    mUGaussianSigma->set(50.f);
-
-    mUResolution = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC2, "u_resolution");
-    stateset->addUniform(mUResolution);
-    osg::Vec2 dims(cvr::PluginHelper::getScreenInfo(0)->width, cvr::PluginHelper::getScreenInfo(0)->height);
-    mUResolution->set(dims);
-
-    mUTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_time");
-    stateset->addUniform(mUTime);
-    mUTime->set(0.f);
-
-    {
-        // Get the fade in out time from the config
-        float fadeInDuration = cvr::ConfigManager::getFloat("value", "Plugin.StarForge.Fades.Phase1.FadeInDuration");
-        auto uFadeInDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeInDuration");
-        stateset->addUniform(uFadeInDuration);
-        uFadeInDuration->set(fadeInDuration);
-
-        float fadeOutTime = ConfigManager::getFloat("value", "Plugin.StarForge.Fades.Phase1.FadeOutTime", 42.f);
-        auto uFadeOutTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutTime");
-        stateset->addUniform(uFadeOutTime);
-        uFadeOutTime->set(fadeOutTime);
-
-        float fadeOutDuration = ConfigManager::getFloat("value", "Plugin.StarForge.Fades.Phase1.FadeOutDuration", 3.f);
-        auto uFadeOutDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutDuration");
-        stateset->addUniform(uFadeOutDuration);
-        uFadeOutDuration->set(fadeOutDuration);
-    }
-//    osg::ref_ptr<osg::Material> material = new osg::Material;
-//    material->setAmbient( osg::Material::FRONT_AND_BACK, osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f) );
-//    material->setDiffuse( osg::Material::FRONT_AND_BACK, osg::Vec4(1.0f, 1.0f, 1.0f, 1.0f) );
-//    stateset->setAttributeAndModes(material.get(), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-
     stateset->setAttributeAndModes(new osg::BlendFunc);
     stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-//
-//    geode->addCullCallback(new FadeInOutCallback(material.get()));
+
+    SetupPhase1Program(geode);
 
     // Add it to the scene graph
     planetRoot->addChild(geode);
@@ -447,6 +386,64 @@ void OSGPlanet::UpdateAgeVelDataTexture() {
 
     image->dirty();
 }
+
+osg::Program * OSGPlanet::SetupPhase1Program(osg::Geode * geode) {
+    auto stateset = geode->getOrCreateStateSet();
+    // Load the shaders
+    auto shadersPath = cvr::ConfigManager::getEntry("value", "Plugin.StarForge.ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
+    auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge.vert"));
+    auto fragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "starforge.frag"));
+
+    if(!vertexShader) {
+        std::cerr << "ERROR: Unable to load vertex shader in " << shadersPath << std::endl;
+        return nullptr;
+    }
+    if(!fragShader) {
+        std::cerr << "ERROR: Unable to load fragment shader in " << shadersPath << std::endl;
+        return nullptr;
+    }
+
+    // Setup the programmable pipeline
+    auto drawProgram = new osg::Program;
+    drawProgram->addShader(vertexShader);
+    drawProgram->addShader(fragShader);
+    stateset->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+
+    auto uMaxParticleAge = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_maxParticleAge");
+    stateset->addUniform(uMaxParticleAge);
+    uMaxParticleAge->set(float(mSystem->getDefaultParticleTemplate().getLifeTime()));
+
+    mUGaussianSigma = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_gaussianSigma");
+    stateset->addUniform(mUGaussianSigma);
+    mUGaussianSigma->set(50.f);
+
+    mUResolution = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC2, "u_resolution");
+    stateset->addUniform(mUResolution);
+    osg::Vec2 dims(cvr::PluginHelper::getScreenInfo(0)->width, cvr::PluginHelper::getScreenInfo(0)->height);
+    mUResolution->set(dims);
+
+    mUTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_time");
+    stateset->addUniform(mUTime);
+    mUTime->set(0.f);
+
+    // Get the fade in out time from the config
+    float fadeInDuration = cvr::ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeInDuration");
+    auto uFadeInDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeInDuration");
+    stateset->addUniform(uFadeInDuration);
+    uFadeInDuration->set(fadeInDuration);
+
+    float fadeOutTime = ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeOutTime", 42.f);
+    auto uFadeOutTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutTime");
+    stateset->addUniform(uFadeOutTime);
+    uFadeOutTime->set(fadeOutTime);
+
+    float fadeOutDuration = ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeOutDuration", 3.f);
+    auto uFadeOutDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutDuration");
+    stateset->addUniform(uFadeOutDuration);
+    uFadeOutDuration->set(fadeOutDuration);
+}
+osg::Program * OSGPlanet::SetupPhase2Program(osg::Geode * geode) {}
+osg::Program * OSGPlanet::SetupPhase3Program(osg::Geode * geode) {}
 
 /**
  * Planet starts far away and we gradually get closer. Once it fills our vision, ...
