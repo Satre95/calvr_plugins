@@ -4,10 +4,11 @@
 #include <cvrConfig/ConfigManager.h>
 #include "SkyBox.hpp"
 #include <osg/BlendFunc>
-
+#include <sstream>
+#include "GlobalParameters.hpp"
 using namespace cvr;
 
-SkyBox::SkyBox(float radius)
+SkyBox::SkyBox(int phase, float radius): mPhase(phase)
 {
     setReferenceFrame( osg::Transform::ABSOLUTE_RF );
     setCullingActive( false );
@@ -43,21 +44,8 @@ SkyBox::SkyBox(float radius)
     drawProgram->addShader(vertexShader);
     drawProgram->addShader(fragShader);
     stateset->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-    // Get the fade in out time from the config
-    float fadeInDuration = cvr::ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeInDuration");
-    auto uFadeInDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeInDuration");
-    stateset->addUniform(uFadeInDuration);
-    uFadeInDuration->set(fadeInDuration);
 
-    float fadeOutTime = ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeOutTime", 42.f);
-    auto uFadeOutTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutTime");
-    stateset->addUniform(uFadeOutTime);
-    uFadeOutTime->set(fadeOutTime);
-
-    float fadeOutDuration = ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeOutDuration", 3.f);
-    auto uFadeOutDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutDuration");
-    stateset->addUniform(uFadeOutDuration);
-    uFadeOutDuration->set(fadeOutDuration);
+    SetupFadeUniforms();
 
     mSkyGeode = new osg::Geode;
     auto sphere = new osg::ShapeDrawable(
@@ -119,4 +107,44 @@ bool SkyBox::computeWorldToLocalMatrix( osg::Matrix& matrix, osg::NodeVisitor* n
     }
     else
         return osg::Transform::computeWorldToLocalMatrix( matrix, nv );
+}
+
+void SkyBox::SetupFadeUniforms() {
+    auto stateset = getOrCreateStateSet();
+    std::stringstream prefix;
+    prefix << params::gPluginConfigPrefix + "Phase";
+    prefix << std::to_string(mPhase);
+    prefix << ".";
+    std::string fullPrefix = prefix.str();
+
+    float fadeInTime = ConfigManager::getFloat(fullPrefix + "Fades.FadeInTime");
+    float fadeInDuration = ConfigManager::getFloat(fullPrefix + "Fades.FadeInDuration");
+    float fadeOutTime = ConfigManager::getFloat(fullPrefix + "Fades.FadeOutTime");
+    float fadeOutDuration = ConfigManager::getFloat(fullPrefix + "Fades.FadeOutDuration");
+
+    auto uFadeInTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_phaseFadeInfo.fadeInTime");
+    auto uFadeInDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_phaseFadeInfo.fadeInDuration");
+    auto uFadeOutTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_phaseFadeInfo.fadeOutTime");
+    auto uFadeOutDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_phaseFadeInfo.fadeOutDuration");
+
+    uFadeInTime->set(fadeInTime); uFadeInDuration->set(fadeInDuration);
+    uFadeOutTime->set(fadeOutTime); uFadeOutDuration->set(fadeOutDuration);
+
+    stateset->addUniform(uFadeInTime); stateset->addUniform(uFadeInDuration);
+    stateset->addUniform(uFadeOutTime); stateset->addUniform(uFadeOutDuration);
+    // Get the fade in out time from the config
+//    float fadeInDuration = cvr::ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeInDuration");
+//    auto uFadeInDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeInDuration");
+//    stateset->addUniform(uFadeInDuration);
+//    uFadeInDuration->set(fadeInDuration);
+//
+//    float fadeOutTime = ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeOutTime", 42.f);
+//    auto uFadeOutTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutTime");
+//    stateset->addUniform(uFadeOutTime);
+//    uFadeOutTime->set(fadeOutTime);
+//
+//    float fadeOutDuration = ConfigManager::getFloat("value", "Plugin.StarForge.Phase1.Fades.FadeOutDuration", 3.f);
+//    auto uFadeOutDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutDuration");
+//    stateset->addUniform(uFadeOutDuration);
+//    uFadeOutDuration->set(fadeOutDuration);
 }

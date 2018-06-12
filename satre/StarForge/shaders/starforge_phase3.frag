@@ -1,7 +1,7 @@
 #version 430 core
 #define NUM_STEPS 80
 #define PI 3.1415926535897932384626433832795
-#define NUM_COLORS 6
+#define MAX_NUM_COLORS 6
 
 //---------------------------------------------------------
 layout (binding = 0) uniform sampler2D ColorTexture;
@@ -12,11 +12,12 @@ uniform float u_maxParticleAge;
 uniform float u_gaussianSigma = 30.f;
 uniform vec2 u_resolution; // Viewport resolution in pixels
 uniform float u_time;
+uniform float u_fadeInTime = 0.f;
 uniform float u_fadeInDuration;
 uniform float u_fadeOutDuration;
 uniform float u_fadeOutTime; // The time point at which to begin fade out.
 
-uniform vec3 u_colors[NUM_COLORS];
+uniform vec3 u_colors[MAX_NUM_COLORS];
 
 //---------------------------------------------------------
 in VS_OUT {
@@ -85,8 +86,7 @@ float Gaussian(float u, float sigma) {
 }
 
 void FadeIn(inout vec4 colorIn) {
-	colorIn.xyz = mix(vec3(0.f), colorIn.xyz, min(u_time / u_fadeInDuration, 1.f));
-
+	colorIn.xyz = mix(vec3(0.f), colorIn.xyz, min((u_time - u_fadeInTime) / u_fadeInDuration, 1.f));
 }
 
 void FadeOut(inout vec4 colorIn) {

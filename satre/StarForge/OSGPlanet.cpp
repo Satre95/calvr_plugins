@@ -20,6 +20,7 @@
 #include <osg/BlendFunc>
 #include <osg/PositionAttitudeTransform>
 #include <unordered_map>
+#include <algorithm>
 
 #include <cvrConfig/ConfigManager.h>
 #include <cvrKernel/PluginHelper.h>
@@ -33,6 +34,7 @@
 #define NUM_COLORS_PHASE_1 4
 #define NUM_COLORS_PHASE_2 5
 #define NUM_COLORS_PHASE_3 4
+#define MAX_NUM_COLORS() std::max(std::max(NUM_COLORS_PHASE_1, NUM_COLORS_PHASE_2), NUM_COLORS_PHASE_3)
 
 
 using namespace cvr;
@@ -268,6 +270,9 @@ osg::Group* OSGPlanet::InitPlanetDrawPipeline() {
     stateset->setAttributeAndModes(new osg::BlendFunc);
     stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 
+    // Setup the colors uniform
+    auto uni = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC3, "u_colors", MAX_NUM_COLORS());
+    stateset->addUniform(uni);
     // Preload all the programs for each phase
 //    mProgram1 = SetupPhase1Program(geode);
 //    mProgram2 = SetupPhase2Program(geode);
@@ -432,8 +437,6 @@ void OSGPlanet::UpdateAgeVelDataTexture() {
 }
 
 osg::Program * OSGPlanet::SetupPhase1Program(osg::Geode * geode) {
-    auto stateset = geode->getOrCreateStateSet();
-    stateset->removeUniform("u_colors");
     // Load the shaders
     auto shadersPath = cvr::ConfigManager::getEntry("value", params::gPluginConfigPrefix + "ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
     auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge_phase1.vert"));
@@ -448,24 +451,19 @@ osg::Program * OSGPlanet::SetupPhase1Program(osg::Geode * geode) {
         return nullptr;
     }
 
-    // Setup the programmable pipeline
-    auto drawProgram = new osg::Program;
-    drawProgram->addShader(vertexShader);
-    drawProgram->addShader(fragShader);
-
-    // Setup the colors for this phase
-    auto uni = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC3, "u_colors", NUM_COLORS_PHASE_1);
     auto numColors = ConfigManager::getInt("value", params::gPluginConfigPrefix + "Phase1.Colors.NumColors", 0);
+    auto uni = geode->getOrCreateStateSet()->getUniform("u_colors");
     for (int i = 1; i <= numColors; ++i) {
         auto color = ConfigManager::getVec3(params::gPluginConfigPrefix + "Phase1.Colors.Color" + std::to_string(i));
         uni->setElement(i - 1, color);
     }
-    stateset->addUniform(uni);
+    // Setup the programmable pipeline
+    auto drawProgram = new osg::Program;
+    drawProgram->addShader(vertexShader);
+    drawProgram->addShader(fragShader);
     return drawProgram;
 }
 osg::Program * OSGPlanet::SetupPhase2Program(osg::Geode * geode) {
-    auto stateset = geode->getOrCreateStateSet();
-    stateset->removeUniform("u_colors");
     // Load the shaders
     auto shadersPath = cvr::ConfigManager::getEntry("value", params::gPluginConfigPrefix + "ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
     auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge_phase2.vert"));
@@ -486,18 +484,15 @@ osg::Program * OSGPlanet::SetupPhase2Program(osg::Geode * geode) {
     drawProgram->addShader(fragShader);
 
     // Setup the colors for this phase
-    auto uni = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC3, "u_colors", NUM_COLORS_PHASE_2);
+    auto uni = geode->getOrCreateStateSet()->getUniform("u_colors");
     auto numColors = ConfigManager::getInt("value", params::gPluginConfigPrefix + "Phase2.Colors.NumColors", 0);
     for (int i = 1; i <= numColors; ++i) {
         auto color = ConfigManager::getVec3(params::gPluginConfigPrefix + "Phase2.Colors.Color" + std::to_string(i));
         uni->setElement(i - 1, color);
     }
-    stateset->addUniform(uni);
     return drawProgram;
 }
 osg::Program * OSGPlanet::SetupPhase3Program(osg::Geode * geode) {
-    auto stateset = geode->getOrCreateStateSet();
-    stateset->removeUniform("u_colors");
     // Load the shaders
     auto shadersPath = cvr::ConfigManager::getEntry("value", params::gPluginConfigPrefix + "ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
     auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge_phase3.vert"));
@@ -518,13 +513,12 @@ osg::Program * OSGPlanet::SetupPhase3Program(osg::Geode * geode) {
     drawProgram->addShader(fragShader);
 
     // Setup the colors for this phase
-    auto uni = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC3, "u_colors", NUM_COLORS_PHASE_3);
     auto numColors = ConfigManager::getInt("value", params::gPluginConfigPrefix + "Phase3.Colors.NumColors", 0);
+    auto uni = geode->getOrCreateStateSet()->getUniform("u_colors");
     for (int i = 1; i <= numColors; ++i) {
         auto color = ConfigManager::getVec3(params::gPluginConfigPrefix + "Phase3.Colors.Color" + std::to_string(i));
         uni->setElement(i - 1, color);
     }
-    stateset->addUniform(uni);
     return drawProgram;
 }
 

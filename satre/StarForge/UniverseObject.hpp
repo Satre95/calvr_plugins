@@ -28,7 +28,7 @@ public:
 
 protected:
 
-    void PrepareCameraFlightPath();
+//    void PrepareCameraFlightPath();
     void SetupSound();
 
     cvr::MenuRangeValue * mScaleRangeSlider = nullptr;
@@ -40,9 +40,12 @@ protected:
 
 
     OSGPlanet * mPlanet = nullptr;
-    std::vector<osg::ref_ptr<SkyBox>> mSkyboxes;
-    osg::ref_ptr<SkyBox> mCurrSkybox;
-    osg::ref_ptr<osg::MatrixTransform> mUniverseTransform = nullptr;
+    std::vector<osg::ref_ptr<SkyBox >> mSkyboxes;
+    SkyBox * mCurrSkybox;
+    osg::MatrixTransform * mUniverseTransform = nullptr;
     oasclient::Sound mAudioTrack;
     std::string mAssetsPath;
+
+    float mPhase1Time, mPhase2Time, mPhase3Time;
+    bool mPhase2Switch = false, mPhase3Switch = false;
 };

@@ -3,28 +3,38 @@
 layout (binding = 0) uniform samplerCube cubemap;
 
 uniform float u_time;
-uniform float u_fadeInDuration;
-uniform float u_fadeOutDuration;
-uniform float u_fadeOutTime; // The time point at which to begin fade out.
+struct FadeInfo {
+	float fadeInTime;
+	float fadeInDuration;
+	float fadeOutTime;
+	float fadeOutDuration;
+};
+
+uniform FadeInfo u_phaseFadeInfo;
 
 in vec3 TexCoords;
 
 out vec4 OutColor;
-void FadeIn(inout vec4 colorIn);
-void FadeOut(inout vec4 colorIn);
+void FadeIn(inout vec4 colorIn, in float startTime, in float duration);
+void FadeOut(inout vec4 colorIn, in float startTime, in float duration);
+void ProcessFade(inout vec4 colorIn);
 
 void main() {
-
 	OutColor = texture(cubemap, TexCoords);
-	FadeIn(OutColor); FadeOut(OutColor);
+	ProcessFade(OutColor);
 }
 
-void FadeIn(inout vec4 colorIn) {
-	colorIn.xyz = mix(vec3(0.f), colorIn.xyz, min(u_time / u_fadeInDuration, 1.f));
-
+void ProcessFade(inout vec4 colorIn) {
+	FadeIn(colorIn, u_phaseFadeInfo.fadeInTime, u_phaseFadeInfo.fadeInDuration);
+	FadeOut(colorIn, u_phaseFadeInfo.fadeOutTime, u_phaseFadeInfo.fadeOutDuration);
 }
 
-void FadeOut(inout vec4 colorIn) {
-	float t = max((u_time - u_fadeOutTime) / u_fadeOutDuration, 0.f);
+void FadeIn(inout vec4 colorIn, in float startTime, in float duration) {
+	float t = clamp((u_time - startTime) / duration, 0.f, 1.f);
+	colorIn.xyz = mix(vec3(0.f), colorIn.xyz, t);
+}
+
+void FadeOut(inout vec4 colorIn, in float startTime, in float duration) {
+	float t = clamp((u_time - startTime) / duration, 0.f, 1.f);
 	colorIn.xyz = mix(colorIn.xyz, vec3(0.f), t);
 }

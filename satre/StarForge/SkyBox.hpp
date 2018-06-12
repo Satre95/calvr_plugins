@@ -7,7 +7,7 @@
 class SkyBox : public osg::Transform
 {
 public:
-    SkyBox(float radius =  1000.f);
+    SkyBox(int phase=1, float radius =  1000.f);
     
     SkyBox( const SkyBox& copy, osg::CopyOp copyop=osg::CopyOp::SHALLOW_COPY )
     : osg::Transform(copy, copyop) {}
@@ -24,6 +24,8 @@ public:
     
 protected:
     virtual ~SkyBox() {}
+    void SetupFadeUniforms();
 
     osg::ref_ptr<osg::Geode> mSkyGeode = nullptr;
+    int mPhase;
 };

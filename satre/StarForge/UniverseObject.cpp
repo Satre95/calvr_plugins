@@ -61,15 +61,14 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
     mPlanet = new OSGPlanet(numRepulsors, numAttractors, mAssetsPath);
 
 //    mSkyboxes.reserve(3);
-    mSkyboxes.push_back(new SkyBox(getOrComputeBoundingBox().radius()));
-    mSkyboxes.push_back(new SkyBox(getOrComputeBoundingBox().radius()));
-    mSkyboxes.push_back(new SkyBox(getOrComputeBoundingBox().radius()));
+    mSkyboxes.push_back(new SkyBox(1, getOrComputeBoundingBox().radius()));
+    mSkyboxes.push_back(new SkyBox(2, getOrComputeBoundingBox().radius()));
+    mSkyboxes.push_back(new SkyBox(3, getOrComputeBoundingBox().radius()));
 
 #pragma omp parallel for
-    for (int i = 1; i <= 3; ++i) {
+    for (int i = 1; i <= 3; i++) {
         auto & skybox = mSkyboxes.at(i - 1);
         // Load and create the skyboxFiles
-        skybox = new SkyBox(getOrComputeBoundingBox().radius());
         skybox->getOrCreateStateSet()->setTextureAttributeAndModes(0, new osg::TexGen);
         std::string skyboxFiles = mAssetsPath + ConfigManager::getEntry("value",
                 params::gPluginConfigPrefix + "Phase" + std::to_string(i) + ".SkyboxPath", "skyboxes/Belawor/");
@@ -89,6 +88,14 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
     mUniverseTransform->addChild(mCurrSkybox);
     mUniverseTransform->addChild(mPlanet->GetGraph());
 
+    mPhase1Time = ConfigManager::getFloat(params::gPluginConfigPrefix + "Phase1.Fades.FadeInTime");
+    mPhase2Time = ConfigManager::getFloat(params::gPluginConfigPrefix + "Phase2.Fades.FadeInTime");
+    mPhase3Time = ConfigManager::getFloat(params::gPluginConfigPrefix + "Phase3.Fades.FadeInTime");
+    std::cerr << mPhase1Time << std::endl;
+    std::cerr << mPhase2Time << std::endl;
+    std::cerr << mPhase3Time << std::endl;
+
+
     osgViewer::ViewerBase::Contexts contexts;
     cvr::CVRViewer::instance()->getContexts(contexts);
     if(contexts.empty() == false) {
@@ -97,7 +104,6 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
         gl_state->setUseVertexAttributeAliasing(true);
     }
 
-//    PrepareCameraFlightPath();
     SetupSound();
 //    osgUtil::Optimizer optimizer;
 //    optimizer.optimize(mPlanet->GetGraph());
@@ -111,7 +117,6 @@ UniverseObject::~UniverseObject()
 	delete mPlanet;
     delete mFrameTimeItem;
     delete mNumParticlesItem;
-
     mAudioTrack.stop();
 
     if(!oasclient::ClientInterface::shutdown()) {
@@ -143,6 +148,21 @@ void UniverseObject::setScale(float scale) {
 
 void UniverseObject::PreFrame(float runningTime) {
     mPlanet->PreFrame(runningTime);
+
+    if(runningTime >= mPhase2Time && !mPhase2Switch) {
+        std::cout << "Switching to phase 2" << std::endl;
+        mUniverseTransform->removeChild(mCurrSkybox);
+        mCurrSkybox = mSkyboxes.at(1);
+        mUniverseTransform->addChild(mCurrSkybox);
+        mPhase2Switch = true;
+    } else if(runningTime >= mPhase3Time && !mPhase3Switch) {
+        std::cout << "Switching to phase 3" << std::endl;
+        mUniverseTransform->removeChild(mCurrSkybox);
+        mCurrSkybox = mSkyboxes.at(2);
+        mUniverseTransform->addChild(mCurrSkybox);
+        mPhase3Switch = true;
+    }
+
     mCurrSkybox->PreFrame(runningTime);
 
 //    std::cerr<<"<<<<<<<<<<<<<<<<<<<<<<<<<<<<"<< std::endl;
@@ -174,6 +194,7 @@ void UniverseObject::PostFrame(float runningTime) {
 
     }
 }
+/*
 void UniverseObject::PrepareCameraFlightPath() {
     osg::AnimationPath * path = new osg::AnimationPath;
     path->setLoopMode(osg::AnimationPath::SWING);
@@ -201,7 +222,7 @@ void UniverseObject::PrepareCameraFlightPath() {
 //    std::cout << "Num cams: " << cams.size() << std::endl;
 
 }
-
+*/
 void UniverseObject::SetupSound() {
    auto serverIP = ConfigManager::getEntry("ip", params::gPluginConfigPrefix + "OAS", "127.0.0.1");
    auto serverPort = ConfigManager::getInt("port", params::gPluginConfigPrefix + "OAS", 12345);

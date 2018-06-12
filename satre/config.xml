@@ -78,9 +78,9 @@
 		<Phase2>
 			<SkyboxPath value="skyboxes/Utaie/" />
 			<Fades>
-				<FadeInTime value="0.0" />
-				<FadeInDuration value="7.2" />
-				<FadeOutTime value="42" />
+				<FadeInTime value="45.0" />
+				<FadeInDuration value="5.0" />
+				<FadeOutTime value="68.0" />
 				<FadeOutDuration value="3" />
 			</Fades>
 			<AnimationPath>
@@ -101,10 +101,10 @@
 		<Phase3>
 			<SkyboxPath value="skyboxes/Phipa/" />
 			<Fades>
-				<FadeInTime value="0.0" />
-				<FadeInDuration value="7.2" />
-				<FadeOutTime value="42" />
-				<FadeOutDuration value="3" />
+				<FadeInTime value="71" />
+				<FadeInDuration value="2.0" />
+				<FadeOutTime value="120" />
+				<FadeOutDuration value="9" />
 			</Fades>
 			<AnimationPath>
 				<NumPoints value="0" />
