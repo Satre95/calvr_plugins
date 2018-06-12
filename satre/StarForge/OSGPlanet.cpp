@@ -29,6 +29,12 @@
 #include <osg/Depth>
 #include <osg/Material>
 
+// These correspond to the macros defined in each respective shader.
+#define NUM_COLORS_PHASE_1 4
+#define NUM_COLORS_PHASE_2 4
+#define NUM_COLORS_PHASE_3 4
+
+
 using namespace cvr;
 
 //int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime);
@@ -202,6 +208,38 @@ osg::Group* OSGPlanet::InitPlanetDrawPipeline() {
     stateset->setAttributeAndModes( new osg::Depth(osg::Depth::LESS));
     auto * counter = dynamic_cast<osgParticle::ConstantRateCounter*>( mParticleEmitter->getCounter());
 
+    auto uMaxParticleAge = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_maxParticleAge");
+    stateset->addUniform(uMaxParticleAge);
+    uMaxParticleAge->set(float(mSystem->getDefaultParticleTemplate().getLifeTime()));
+
+    mUGaussianSigma = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_gaussianSigma");
+    stateset->addUniform(mUGaussianSigma);
+    mUGaussianSigma->set(50.f);
+
+    mUResolution = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC2, "u_resolution");
+    stateset->addUniform(mUResolution);
+    osg::Vec2 dims(cvr::PluginHelper::getScreenInfo(0)->width, cvr::PluginHelper::getScreenInfo(0)->height);
+    mUResolution->set(dims);
+
+    mUTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_time");
+    stateset->addUniform(mUTime);
+    mUTime->set(0.f);
+
+    // Get the fade in out time from the config
+    float fadeInDuration = cvr::ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeInDuration");
+    auto uFadeInDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeInDuration");
+    stateset->addUniform(uFadeInDuration);
+    uFadeInDuration->set(fadeInDuration);
+
+    float fadeOutTime = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeOutTime", 42.f);
+    auto uFadeOutTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutTime");
+    stateset->addUniform(uFadeOutTime);
+    uFadeOutTime->set(fadeOutTime);
+
+    float fadeOutDuration = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeOutDuration", 3.f);
+    auto uFadeOutDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutDuration");
+    stateset->addUniform(uFadeOutDuration);
+    uFadeOutDuration->set(fadeOutDuration);
     int texSize = int(std::ceil(std::sqrt(counter->getEstimatedMaxNumOfParticles(mParticleLifeTime)))) + 1; // Err on the side of caution
     std::cerr << "Initializing textures with width " << texSize << std::endl;
     {
@@ -230,7 +268,13 @@ osg::Group* OSGPlanet::InitPlanetDrawPipeline() {
     stateset->setAttributeAndModes(new osg::BlendFunc);
     stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 
-    SetupPhase1Program(geode);
+    // Preload all the programs for each phase
+    mProgram1 = SetupPhase1Program(geode);
+    mProgram2 = SetupPhase2Program(geode);
+    mProgram3 = SetupPhase3Program(geode);
+
+    // Start with phase 1.
+    stateset->setAttribute(mProgram1);
 
     // Add it to the scene graph
     planetRoot->addChild(geode);
@@ -407,40 +451,16 @@ osg::Program * OSGPlanet::SetupPhase1Program(osg::Geode * geode) {
     auto drawProgram = new osg::Program;
     drawProgram->addShader(vertexShader);
     drawProgram->addShader(fragShader);
-    stateset->setAttribute(drawProgram, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 
-    auto uMaxParticleAge = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_maxParticleAge");
-    stateset->addUniform(uMaxParticleAge);
-    uMaxParticleAge->set(float(mSystem->getDefaultParticleTemplate().getLifeTime()));
-
-    mUGaussianSigma = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_gaussianSigma");
-    stateset->addUniform(mUGaussianSigma);
-    mUGaussianSigma->set(50.f);
-
-    mUResolution = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC2, "u_resolution");
-    stateset->addUniform(mUResolution);
-    osg::Vec2 dims(cvr::PluginHelper::getScreenInfo(0)->width, cvr::PluginHelper::getScreenInfo(0)->height);
-    mUResolution->set(dims);
-
-    mUTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_time");
-    stateset->addUniform(mUTime);
-    mUTime->set(0.f);
-
-    // Get the fade in out time from the config
-    float fadeInDuration = cvr::ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeInDuration");
-    auto uFadeInDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeInDuration");
-    stateset->addUniform(uFadeInDuration);
-    uFadeInDuration->set(fadeInDuration);
-
-    float fadeOutTime = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeOutTime", 42.f);
-    auto uFadeOutTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutTime");
-    stateset->addUniform(uFadeOutTime);
-    uFadeOutTime->set(fadeOutTime);
-
-    float fadeOutDuration = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeOutDuration", 3.f);
-    auto uFadeOutDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutDuration");
-    stateset->addUniform(uFadeOutDuration);
-    uFadeOutDuration->set(fadeOutDuration);
+    // Setup the colors for this phaseE
+    auto uni = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC3, "u_colors", NUM_COLORS_PHASE_1);
+    auto numColors = ConfigManager::getInt("value", params::gPluginConfigPrefix + "Phase1.Colors.NumColors", 0);
+    for (int i = 1; i <= numColors; ++i) {
+        auto color = ConfigManager::getVec3(params::gPluginConfigPrefix + "Phase1.Colors.Color" + std::to_string(i));
+        uni->setElement(i - 1, color);
+    }
+    stateset->addUniform(uni);
+    return drawProgram;
 }
 osg::Program * OSGPlanet::SetupPhase2Program(osg::Geode * geode) {}
 osg::Program * OSGPlanet::SetupPhase3Program(osg::Geode * geode) {}

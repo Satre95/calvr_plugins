@@ -69,4 +69,6 @@ private:
 
     float mParticleLifeTime = 10.f;
     float mRotationRate = 0.15f;
+
+    osg::Program * mProgram1, *mProgram2, *mProgram3;
 };

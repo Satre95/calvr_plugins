@@ -16,6 +16,8 @@ uniform float u_fadeInDuration;
 uniform float u_fadeOutDuration;
 uniform float u_fadeOutTime; // The time point at which to begin fade out.
 
+uniform vec3 u_colors[4];
+
 //---------------------------------------------------------
 in VS_OUT {
 	vec4 FragColor;
@@ -63,23 +65,10 @@ void main() {
 	vec3 q, r;
 	vec3 pattern = pattern(p, q, r);
 	vec3 texColor = texture(ColorTexture, fs_in.ColorTexCoord).xyz;
-	// vec3 color0 = vec3(0.545f, 0.302f, 0.169f);
-	vec3 color0 = vec3(0.5f, 0.23f, 0.115f);
-	vec3 color1 = vec3(0.612f, 0.702f, 0.761f);
-	vec3 color2 = vec3(0.792f, 0.341f, 0.240f);
-	vec3 color3 = vec3(54.f/255.f, 77.f/255.f, 61.f/255.f);
-	// vec3 color4 = vec3(0.85f, 0.4f, 0.64f);
 
-	vec3 color = mix(color0, color1, length(pattern));
-	color = mix(color, color1, length(r));
-	color = mix(color, color3, pattern.z);
-	// color = mix(color, color4, pattern.x);
-
-	// color *= mix(color, texColor, age);
-
-	// color.x += dFdx(q);
-	// color.y += dFdy(q);
-	// color.z += dFdx(r);
+	vec3 color = mix(u_colors[0], u_colors[1], length(pattern));
+	color = mix(color, u_colors[2], length(r));
+	color = mix(color, u_colors[0], pattern.z);
 
 	OutColor = vec4(color * 1.1, 1.f);
 	FadeIn(OutColor);
