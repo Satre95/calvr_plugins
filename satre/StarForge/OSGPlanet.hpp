@@ -32,13 +32,16 @@ private:
     osg::Group * InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir, bool drawSystem = false);
     osg::Group * InitPlanetDrawPipeline();
 
-    osg::Program * SetupPhase1Program(osg::Geode * geode);
-    osg::Program * SetupPhase2Program(osg::Geode * geode);
-    osg::Program * SetupPhase3Program(osg::Geode * geode);
+    osg::Program * LoadProgramForPhase(int phase);
 
-    void CleanupPhase1(osg::Geode * geode);
-    void CleanupPhase2(osg::Geode * geode);
-    void CleanupPhase3(osg::Geode * geode);
+    void SetupPhase1Colors(osg::Geode * geode);
+    void SetupPhase2Colors(osg::Geode * geode);
+    void SetupPhase3Colors(osg::Geode * geode);
+
+
+//    void CleanupPhase1(osg::Geode * geode);
+//    void CleanupPhase2(osg::Geode * geode);
+//    void CleanupPhase3(osg::Geode * geode);
 
     void UpdatePositionDataTexture();
     void UpdateColorDataTexture();
@@ -61,6 +64,7 @@ private:
 //	osg::ref_ptr<osg::MatrixTransform> mTranslationNode = nullptr;
 
 	osg::ref_ptr<osg::ShapeDrawable> mPlanetSphere = nullptr;
+	osg::ref_ptr<osg::Geode> mPlanetGeode = nullptr;
 	osg::Texture2D * mColorTexture = nullptr;
 
 	// (x, y, z) = velocity, (w) = age
