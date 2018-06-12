@@ -436,8 +436,8 @@ osg::Program * OSGPlanet::SetupPhase1Program(osg::Geode * geode) {
     stateset->removeUniform("u_colors");
     // Load the shaders
     auto shadersPath = cvr::ConfigManager::getEntry("value", params::gPluginConfigPrefix + "ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
-    auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge.vert"));
-    auto fragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "starforge.frag"));
+    auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge_phase1.vert"));
+    auto fragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "starforge_phase1.frag"));
 
     if(!vertexShader) {
         std::cerr << "ERROR: Unable to load vertex shader in " << shadersPath << std::endl;
