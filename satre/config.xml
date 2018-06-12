@@ -1,0 +1,141 @@
+<?xml version="1.0"?>
+
+
+<Background g="0.0" a="0.0" />
+
+<Stencil value="true" />
+<MultiThreaded value="CullDrawThreadPerContext" />
+<PreSwapOperation value="FINISH" />
+<SyncToVBlank value="On" />
+<Near value="1"/>
+<Far value="1000000" />
+<CullingMode value="CALVR" /> <!-- CALVR | DEFAULT -->
+<MultiSample value="4" />
+
+<ShowAxis value="off" />
+
+<ConfigDebug value="false" />
+<EventDebug value="false" />
+
+<Input>
+	<TrackingDebug value="false" />
+	<TrackingSystem0 value="MOUSE">
+		<Offset x="0" y="0" z="0" />
+		<Orientation h="0" p="0" r="0" />
+
+		<NumBodies value="1" />
+		<NumButtons value="3" />
+		<NumValuators value="0" />
+
+		<Body0>
+			<Offset x="0" y="0" z="0" />
+			<Orientation h="0" p="0" r="0" />
+		</Body0>
+	</TrackingSystem0>
+
+	<NumHeads value="0" />
+	<Head0Address system="0" body="0" />
+
+	<NumHands value="1" />
+	<Hand0>
+		<Address system="0" body="0" />
+		<ButtonMask system0="0xFF"  />
+		<Valuator0 system="0" number="0" type="NON_ZERO" />
+	</Hand0>
+</Input>
+
+<Plugin>
+	<StarForge value="on">
+		<NumRepulsors value="5" />
+		<NumAttractors value="22" />
+		<AssetsPath value="/home/satre/Assets/StarForge/"/>
+		<ShadersPath value="/home/satre/Developer/CVRPlugins/satre/StarForge/shaders/" />
+		<SkyboxPath value="skyboxes/Belawor/" />
+		<UniversePosition x="0" y="0" z="0" />
+		<OAS ip="127.0.0.1" port="31231" />
+		<AudioTrack file="../../Dropbox/StarForge Planet/final1Mono.wav" gain="1.f"/>
+		<Phase1>
+			<Fades>
+				<FadeInTime value="0.0" />
+				<FadeInDuration value="7.2" />
+				<FadeOutTime value="42" />
+				<FadeOutDuration value="3" />
+			</Fades>
+			<AnimationPath>
+				<NumPoints value="2" />
+				<Point1 x="0" y="800" z="0.0" w="0"/> <!-- w is the time -->
+				<Point2 x="0" y="-390" z="0" w="10" />
+			</AnimationPath>
+			<Colors>
+				<NumColors value="4"/> <!-- If you change this value, make sure to update constant in shader! -->
+				<Color1 x="0.5" y="0.23" z="0.115" />
+				<Color2 x="0.612" y="0.702" z="0.761" />
+				<Color3 x="0.792" y="0.341" z="0.240" />
+				<Color4 x="0.2118" y="0.302" z="0.4392" />
+			</Colors>
+		</Phase1>
+		<Phase2>
+			<Fades>
+				<FadeInTime value="0.0" />
+				<FadeInDuration value="7.2" />
+				<FadeOutTime value="42" />
+				<FadeOutDuration value="3" />
+			</Fades>
+			<AnimationPath>
+				<NumPoints value="2" />
+				<Point1 x="0" y="800" z="0.0" w="0"/> <!-- w is the time -->
+				<Point2 x="0" y="-390" z="0" w="10" />
+			</AnimationPath>
+			<Colors>
+				<NumColors value="5"/> <!-- If you change this value, make sure to update constant in shader! -->
+				<Color1 x="0.5" y="0.23" z="0.115" />
+				<Color2 x="0.612" y="0.702" z="0.761" />
+				<Color3 x="0.792" y="0.341" z="0.240" />
+				<Color4 x="0.2118" y="0.302" z="0.4392" />
+			</Colors>
+		</Phase2>
+	</StarForge>
+
+</Plugin>
+
+<ContextMenus>
+	<Scale value="1.0" />
+	<MinDistance value="750" />
+	<MaxDistance value="1500" />
+	<DefaultOpenButton value="1" />
+</ContextMenus>
+
+<MenuSystem type="BOARDMENU">
+	<BoardMenu>
+		<Position distance="2000" />
+		<Scale value="1.0" />
+		<Buttons select="0" open="1" />
+		<Trigger value="DOUBLECLICK" />
+	</BoardMenu>
+</MenuSystem>
+
+
+<ViewerPosition x="0" y="-500" z="0" />
+<SceneSize value="2000" />
+
+<NumPipes value="1" />
+<NumWindows value="1" />
+<NumScreens value="1" />
+
+<PipeConfig>
+	<Pipe server="1" screen="0" name="0" />
+</PipeConfig>
+
+<ChannelConfig>
+	<Channel width="1920" height="1080" left="0" botton="0" stereoMode="MONO" comment="Main" windowIndex="0" name="0" />
+</ChannelConfig>
+
+<WindowConfig>
+	<Window width="1920" height="1080" comment="MAIN" pipeIndex="0"  left="50" bottom="50" name="0" decoration="false" overrideRedirect="false" />
+</WindowConfig>
+
+
+<ScreenConfig>
+	<Screen width="1920" comment="FRONT" h="0.0" originX="0" originY="0" originZ="0" height="1080" p="0.0" r="0.0" name="0" />
+</ScreenConfig>
+
