@@ -1,7 +1,7 @@
 #version 430 core
 #define NUM_STEPS 80
 #define PI 3.1415926535897932384626433832795
-#define NUM_COLORS 4
+#define NUM_COLORS 6
 
 //---------------------------------------------------------
 layout (binding = 0) uniform sampler2D ColorTexture;
@@ -16,7 +16,7 @@ uniform float u_fadeInDuration;
 uniform float u_fadeOutDuration;
 uniform float u_fadeOutTime; // The time point at which to begin fade out.
 
-uniform vec3 u_colors[4];
+uniform vec3 u_colors[NUM_COLORS];
 
 //---------------------------------------------------------
 in VS_OUT {
@@ -66,12 +66,14 @@ void main() {
 	vec3 pattern = pattern(p, q, r);
 	vec3 texColor = texture(ColorTexture, fs_in.ColorTexCoord).xyz;
 
-	vec3 color = mix(u_colors[0], u_colors[1], length(pattern));
-	color = mix(color, u_colors[1], length(r));
-	color = mix(color, u_colors[2], pattern.z);
-	color = mix(color, u_colors[3], r.y);
+	vec3 color = mix(u_colors[0], u_colors[1], r.z);
+	color = mix(color, u_colors[1], length(r.yz));
+	color = mix(color, u_colors[2], q.z);
+	color = mix(color, u_colors[3], length(r.xy) * q.z);
+	color = mix(color, u_colors[4], length(r.xz) * pattern.z);
+	color = mix(color, u_colors[5], length(r.xz) * pattern.x);
 
-	OutColor = vec4(color * 1.1, 1.f);
+	OutColor = vec4(color * 1.0f, 1.f);
 	FadeIn(OutColor);
 	FadeOut(OutColor);
 }
@@ -295,11 +297,11 @@ vec3 doMagic(vec3 p) {
 
 vec3 pattern(in vec3 p, out vec3 q, out vec3 r) {
 	float pLength = length(p);
-	// p.x += 0.15*sin(0.27 * u_time + pLength * 4.1);
-	// p.y += 0.15*cos(0.23 * u_time + pLength * 4.7);
-	// p.x += 0.15*sin(0.21 * u_time + pLength * 4.5);
-	p += u_time / 10.f;
+	p.x += 0.15*sin(0.75 * u_time + pLength * 4.1);
+	p.y += 0.15*cos(0.80 * u_time + pLength * 4.7);
+	p.x += 0.15*sin(0.45 * u_time + pLength * 4.5);
 
+	p += pLength / 15.f;
 	q = vec3( fbm(p + vec3(0, 0, 0)),
 					fbm(p + vec3(5.2f, 1.3f, 0.4f)), 
 					fbm(p + vec3(3.2f, 1.6f, 2.4f))

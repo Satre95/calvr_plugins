@@ -269,12 +269,12 @@ osg::Group* OSGPlanet::InitPlanetDrawPipeline() {
     stateset->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
 
     // Preload all the programs for each phase
-    mProgram1 = SetupPhase1Program(geode);
-    mProgram2 = SetupPhase2Program(geode);
+//    mProgram1 = SetupPhase1Program(geode);
+//    mProgram2 = SetupPhase2Program(geode);
     mProgram3 = SetupPhase3Program(geode);
 
     // Start with phase 1.
-    stateset->setAttribute(mProgram2);
+    stateset->setAttribute(mProgram3);
 
     // Add it to the scene graph
     planetRoot->addChild(geode);
@@ -495,7 +495,38 @@ osg::Program * OSGPlanet::SetupPhase2Program(osg::Geode * geode) {
     stateset->addUniform(uni);
     return drawProgram;
 }
-osg::Program * OSGPlanet::SetupPhase3Program(osg::Geode * geode) {}
+osg::Program * OSGPlanet::SetupPhase3Program(osg::Geode * geode) {
+    auto stateset = geode->getOrCreateStateSet();
+    stateset->removeUniform("u_colors");
+    // Load the shaders
+    auto shadersPath = cvr::ConfigManager::getEntry("value", params::gPluginConfigPrefix + "ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
+    auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX, osgDB::findDataFile(shadersPath + "starforge_phase3.vert"));
+    auto fragShader = osg::Shader::readShaderFile(osg::Shader::FRAGMENT, osgDB::findDataFile(shadersPath + "starforge_phase3.frag"));
+
+    if(!vertexShader) {
+        std::cerr << "ERROR: Unable to load vertex shader in " << shadersPath << std::endl;
+        return nullptr;
+    }
+    if(!fragShader) {
+        std::cerr << "ERROR: Unable to load fragment shader in " << shadersPath << std::endl;
+        return nullptr;
+    }
+
+    // Setup the programmable pipeline
+    auto drawProgram = new osg::Program;
+    drawProgram->addShader(vertexShader);
+    drawProgram->addShader(fragShader);
+
+    // Setup the colors for this phase
+    auto uni = new osg::Uniform(osg::Uniform::Type::FLOAT_VEC3, "u_colors", NUM_COLORS_PHASE_3);
+    auto numColors = ConfigManager::getInt("value", params::gPluginConfigPrefix + "Phase3.Colors.NumColors", 0);
+    for (int i = 1; i <= numColors; ++i) {
+        auto color = ConfigManager::getVec3(params::gPluginConfigPrefix + "Phase3.Colors.Color" + std::to_string(i));
+        uni->setElement(i - 1, color);
+    }
+    stateset->addUniform(uni);
+    return drawProgram;
+}
 
 void OSGPlanet::CleanupPhase1(osg::Geode *geode) {
 }

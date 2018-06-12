@@ -47,7 +47,7 @@
 <Plugin>
 	<StarForge value="on">
 		<NumRepulsors value="5" />
-		<NumAttractors value="22" />
+		<NumAttractors value="5" />
 		<AssetsPath value="/home/satre/Assets/StarForge/"/>
 		<ShadersPath value="/home/satre/Developer/CVRPlugins/satre/StarForge/shaders/" />
 		<UniversePosition x="0" y="0" z="0" />
@@ -62,15 +62,15 @@
 				<FadeOutDuration value="3" />
 			</Fades>
 			<AnimationPath>
-				<NumPoints value="2" />
+				<NumPoints value="0" />
 				<Point1 x="0" y="800" z="0.0" w="0"/> <!-- w is the time -->
 				<Point2 x="0" y="-390" z="0" w="10" />
 			</AnimationPath>
 			<Colors>
 				<NumColors value="4"/> <!-- If you change this value, make sure to update constant in shader! -->
-				<Color1 x="0.5" y="0.23" z="0.115" />
-				<Color2 x="0.612" y="0.702" z="0.761" />
-				<Color3 x="0.792" y="0.341" z="0.240" />
+				<Color1 x="0.3" y="0.23" z="0.115" />
+				<Color2 x="0.212" y="0.702" z="0.761" />
+				<Color3 x="0.392" y="0.341" z="0.240" />
 				<Color4 x="0.2118" y="0.302" z="0.4392" />
 			</Colors>
 		</Phase1>
@@ -84,7 +84,7 @@
 				<FadeOutDuration value="3" />
 			</Fades>
 			<AnimationPath>
-				<NumPoints value="2" />
+				<NumPoints value="0" />
 				<Point1 x="0" y="800" z="0.0" w="0"/> <!-- w is the time -->
 				<Point2 x="0" y="-390" z="0" w="10" />
 			</AnimationPath>
@@ -92,7 +92,7 @@
 				<NumColors value="5"/> <!-- If you change this value, make sure to update constant in shader! -->
 				<Color1 x="0.8" y="0.1529" z="0.115" />
 				<Color2 x="0.8821" y="0.592" z="0.1216" />
-				<Color3 x="0.554" y="0.9647" z="0.8901" />
+				<Color3 x="0.8001" y="0.9647" z="0.8901" />
 				<Color4 x="0.7137" y="0.7882" z="0.8549" />
 				<Color5 x="0.8118" y="0.6157" z="0.5098" />
 			</Colors>
@@ -107,17 +107,18 @@
 				<FadeOutDuration value="3" />
 			</Fades>
 			<AnimationPath>
-				<NumPoints value="2" />
+				<NumPoints value="0" />
 				<Point1 x="0" y="800" z="0.0" w="0"/> <!-- w is the time -->
 				<Point2 x="0" y="-390" z="0" w="10" />
 			</AnimationPath>
 			<Colors>
-				<NumColors value="5"/> <!-- If you change this value, make sure to update constant in shader! -->
-				<Color1 x="1.0" y="0.1529" z="0.115" />
-				<Color2 x="0.9921" y="0.592" z="0.1216" />
-				<Color3 x="0.9921" y="0.9647" z="0.8901" />
-				<Color4 x="0.7137" y="0.7882" z="0.8549" />
-				<Color5 x="0.8118" y="0.6157" z="0.5098" />
+				<NumColors value="6"/> <!-- If you change this value, make sure to update constant in shader! -->
+				<Color1 x="0.3333" y="0.7529" z="0.7882" />
+				<Color2 x="0.3137" y="0.1765" z="0.2824" />
+				<Color3 x="0.9333" y="0.5216" z="0.2667" />
+				<Color4 x="0.6863" y="0.5569" z="0.2784" />
+				<Color5 x="0.0627" y="0.1098" z="0.2235" />
+				<Color6 x="0.2941" y="0.6549" z="0.7059" />
 			</Colors>
 		</Phase3>
 	</StarForge>
