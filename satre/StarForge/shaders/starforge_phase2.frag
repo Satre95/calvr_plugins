@@ -67,11 +67,11 @@ void main() {
 	vec3 texColor = texture(ColorTexture, fs_in.ColorTexCoord).xyz;
 
 	vec3 color = mix(u_colors[0], u_colors[1], length(pattern));
-	color = mix(color, u_colors[1], length(r));
-	color = mix(color, u_colors[2], pattern.z);
-	color = mix(color, u_colors[3], r.y);
+	color = mix(color, u_colors[1], length(r)) * 0.8f;
+	color = mix(color, u_colors[2], pattern.z) * 0.8f;
+	color = mix(color, u_colors[3], length(q)) * 0.8f;
 
-	OutColor = vec4(color * 1.1, 1.f);
+	OutColor = vec4(color, 1.f);
 	FadeIn(OutColor);
 	FadeOut(OutColor);
 }

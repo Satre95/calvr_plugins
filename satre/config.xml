@@ -90,9 +90,9 @@
 			</AnimationPath>
 			<Colors>
 				<NumColors value="5"/> <!-- If you change this value, make sure to update constant in shader! -->
-				<Color1 x="1.0" y="0.1529" z="0.115" />
-				<Color2 x="0.9921" y="0.592" z="0.1216" />
-				<Color3 x="0.9921" y="0.9647" z="0.8901" />
+				<Color1 x="0.8" y="0.1529" z="0.115" />
+				<Color2 x="0.8821" y="0.592" z="0.1216" />
+				<Color3 x="0.554" y="0.9647" z="0.8901" />
 				<Color4 x="0.7137" y="0.7882" z="0.8549" />
 				<Color5 x="0.8118" y="0.6157" z="0.5098" />
 			</Colors>

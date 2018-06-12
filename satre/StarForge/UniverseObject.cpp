@@ -72,12 +72,13 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
         skybox = new SkyBox(getOrComputeBoundingBox().radius());
         skybox->getOrCreateStateSet()->setTextureAttributeAndModes(0, new osg::TexGen);
         std::string skyboxFiles = mAssetsPath + ConfigManager::getEntry("value",
-                params::gPluginConfigPrefix + "Phase" + std::to_string(i) + ".SkyboxPath", "skyboxes/Belawor/"); // Relative to assets path
+                params::gPluginConfigPrefix + "Phase" + std::to_string(i) + ".SkyboxPath", "skyboxes/Belawor/");
 
         skybox->setEnvironmentMap(0,
                                   osgDB::readImageFile(skyboxFiles + "Left.tga"),
                                   osgDB::readImageFile(skyboxFiles + "Right.tga"),
-                                  osgDB::readImageFile(skyboxFiles + "Down.tga"), osgDB::readImageFile(skyboxFiles + "Up.tga"),
+                                  osgDB::readImageFile(skyboxFiles + "Down.tga"),
+                                  osgDB::readImageFile(skyboxFiles + "Up.tga"),
                                   osgDB::readImageFile(skyboxFiles + "Front.tga"),
                                   osgDB::readImageFile(skyboxFiles + "Back.tga")
         );
