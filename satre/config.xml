@@ -46,13 +46,25 @@
 
 <Plugin>
 	<StarForge value="on">
-		<NumRepulsors value="5" />
-		<NumAttractors value="5" />
+		<NumRepulsors value="1" />
+		<NumAttractors value="1" />
 		<AssetsPath value="/home/satre/Assets/StarForge/"/>
 		<ShadersPath value="/home/satre/Developer/CVRPlugins/satre/StarForge/shaders/" />
 		<UniversePosition x="0" y="0" z="0" />
 		<OAS ip="127.0.0.1" port="31231" />
 		<AudioTrack file="../../Dropbox/StarForge Planet/final1Mono.wav" gain="1.f"/>
+
+		<AnimationPath>
+			<NumPoints value="6" />
+			<Point1 x="0" y="1500" z="0.0" w="0"/>
+			<Point2 x="0" y="-390" z="0" w="35" /> <!-- Corresponds to end of phase 1 -->
+
+			<Point3 x="0" y="-390" z="-100" w="45"/>
+			<Point4 x="0" y="-390" z="-100" w="68" /> <!-- Corresponds to end of phase 2 -->
+			
+			<Point5 x="0" y="-500" z="0" w="71"/>
+			<Point6 x="0" y="-500" z="0" w="209"/> <!-- Corresponds to end of phase 3 -->
+		</AnimationPath>
 
 		<Phase1>
 			<SkyboxPath value="skyboxes/Belawor/" />
@@ -62,11 +74,6 @@
 				<FadeOutTime value="42" />
 				<FadeOutDuration value="3" />
 			</Fades>
-			<AnimationPath>
-				<NumPoints value="2" />
-				<Point1 x="0" y="800" z="0.0" w="0"/> <!-- w is the time -->
-				<Point2 x="0" y="-390" z="0" w="10" />
-			</AnimationPath>
 			<Colors>
 				<NumColors value="4"/> <!-- If you change this value, make sure to update constant in shader! -->
 				<Color1 x="0.3" y="0.23" z="0.115" />
@@ -84,11 +91,6 @@
 				<FadeOutTime value="68.0" />
 				<FadeOutDuration value="3" />
 			</Fades>
-			<AnimationPath>
-				<NumPoints value="2" />
-				<Point1 x="0" y="0" z="0" w="0"/> <!-- w is the time -->
-				<Point2 x="0" y="0" z="0" w="10" />
-			</AnimationPath>
 			<Colors>
 				<NumColors value="5"/> <!-- If you change this value, make sure to update constant in shader! -->
 				<Color1 x="0.8" y="0.1529" z="0.115" />
@@ -104,14 +106,9 @@
 			<Fades>
 				<FadeInTime value="71" />
 				<FadeInDuration value="2.0" />
-				<FadeOutTime value="120" />
+				<FadeOutTime value="200" />
 				<FadeOutDuration value="9" />
 			</Fades>
-			<AnimationPath>
-				<NumPoints value="2" />
-				<Point1 x="0" y="0" z="0" w="0"/> <!-- w is the time -->
-				<Point2 x="0" y="-500" z="0" w="10" />
-			</AnimationPath>
 			<Colors>
 				<NumColors value="6"/> <!-- If you change this value, make sure to update constant in shader! -->
 				<Color1 x="0.3333" y="0.7529" z="0.7882" />

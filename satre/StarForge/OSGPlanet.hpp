@@ -48,9 +48,7 @@ private:
     void UpdateColorDataTexture();
     void UpdateAgeVelDataTexture();
 
-    osg::AnimationPath * CreateAnimationPhase1(float time);
-    osg::AnimationPath * CreateAnimationPhase2(float time);
-    osg::AnimationPath * CreateAnimationPhase3(float time);
+    osg::AnimationPath * LoadAnimationPath(float time);
 
 
 	osgParticle::ParticleSystem * mSystem = nullptr;

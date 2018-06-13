@@ -91,10 +91,6 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
     mPhase1Time = ConfigManager::getFloat(params::gPluginConfigPrefix + "Phase1.Fades.FadeInTime");
     mPhase2Time = ConfigManager::getFloat(params::gPluginConfigPrefix + "Phase2.Fades.FadeInTime");
     mPhase3Time = ConfigManager::getFloat(params::gPluginConfigPrefix + "Phase3.Fades.FadeInTime");
-    std::cerr << mPhase1Time << std::endl;
-    std::cerr << mPhase2Time << std::endl;
-    std::cerr << mPhase3Time << std::endl;
-
 
     osgViewer::ViewerBase::Contexts contexts;
     cvr::CVRViewer::instance()->getContexts(contexts);
@@ -216,7 +212,7 @@ void UniverseObject::SetupSound() {
    auto gain = ConfigManager::getFloat("gain", params::gPluginConfigPrefix + "AudioTrack", 1.f);
 
    if(!oasclient::ClientInterface::initialize(serverIP, serverPort)) {
-       std::cerr << "ERROR: UNable to connect to OAS server at IP: " << serverIP << " and port: " << serverPort << std::endl;
+       std::cerr << "ERROR: Unable to connect to OAS server at IP: " << serverIP << " and port: " << serverPort << std::endl;
        return;
    }
 
