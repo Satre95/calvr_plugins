@@ -11,6 +11,7 @@
 #include <osg/Texture2D>
 #include <osgParticle/ModularEmitter>
 #include <osg/AnimationPath>
+#include <osg/PositionAttitudeTransform>
 
 /// Wrapper class around an OSG Particle System
 class OSGPlanet
@@ -47,9 +48,9 @@ private:
     void UpdateColorDataTexture();
     void UpdateAgeVelDataTexture();
 
-    osg::AnimationPath * CreateAnimationPhase1();
-    osg::AnimationPath * CreateAnimationPhase2();
-    osg::AnimationPath * CreateAnimationPhase3();
+    osg::AnimationPath * CreateAnimationPhase1(float time);
+    osg::AnimationPath * CreateAnimationPhase2(float time);
+    osg::AnimationPath * CreateAnimationPhase3(float time);
 
 
 	osgParticle::ParticleSystem * mSystem = nullptr;
@@ -61,6 +62,7 @@ private:
     osg::ref_ptr<osg::MatrixTransform> mLastTransform = nullptr;
 	osg::ref_ptr<osg::MatrixTransform> mScaleNode = nullptr; // Scale node
 	osg::ref_ptr<osg::MatrixTransform> mRotationNode = nullptr;
+	osg::ref_ptr<osg::PositionAttitudeTransform> mAnimationNode = nullptr;
 //	osg::ref_ptr<osg::MatrixTransform> mTranslationNode = nullptr;
 
 	osg::ref_ptr<osg::ShapeDrawable> mPlanetSphere = nullptr;

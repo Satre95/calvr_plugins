@@ -53,6 +53,7 @@
 		<UniversePosition x="0" y="0" z="0" />
 		<OAS ip="127.0.0.1" port="31231" />
 		<AudioTrack file="../../Dropbox/StarForge Planet/final1Mono.wav" gain="1.f"/>
+
 		<Phase1>
 			<SkyboxPath value="skyboxes/Belawor/" />
 			<Fades>
@@ -62,7 +63,7 @@
 				<FadeOutDuration value="3" />
 			</Fades>
 			<AnimationPath>
-				<NumPoints value="0" />
+				<NumPoints value="2" />
 				<Point1 x="0" y="800" z="0.0" w="0"/> <!-- w is the time -->
 				<Point2 x="0" y="-390" z="0" w="10" />
 			</AnimationPath>
@@ -84,9 +85,9 @@
 				<FadeOutDuration value="3" />
 			</Fades>
 			<AnimationPath>
-				<NumPoints value="0" />
-				<Point1 x="0" y="800" z="0.0" w="0"/> <!-- w is the time -->
-				<Point2 x="0" y="-390" z="0" w="10" />
+				<NumPoints value="2" />
+				<Point1 x="0" y="0" z="0" w="0"/> <!-- w is the time -->
+				<Point2 x="0" y="0" z="0" w="10" />
 			</AnimationPath>
 			<Colors>
 				<NumColors value="5"/> <!-- If you change this value, make sure to update constant in shader! -->
@@ -107,9 +108,9 @@
 				<FadeOutDuration value="9" />
 			</Fades>
 			<AnimationPath>
-				<NumPoints value="0" />
-				<Point1 x="0" y="800" z="0.0" w="0"/> <!-- w is the time -->
-				<Point2 x="0" y="-390" z="0" w="10" />
+				<NumPoints value="2" />
+				<Point1 x="0" y="0" z="0" w="0"/> <!-- w is the time -->
+				<Point2 x="0" y="-500" z="0" w="10" />
 			</AnimationPath>
 			<Colors>
 				<NumColors value="6"/> <!-- If you change this value, make sure to update constant in shader! -->
@@ -143,7 +144,7 @@
 
 
 <ViewerPosition x="0" y="-500" z="0" />
-<SceneSize value="2000" />
+<SceneSize value="20000" />
 
 <NumPipes value="1" />
 <NumWindows value="1" />

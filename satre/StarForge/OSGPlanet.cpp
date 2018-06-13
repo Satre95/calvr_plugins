@@ -18,7 +18,6 @@
 #include <osg/Matrix>
 #include <osgParticle/LinearInterpolator>
 #include <osg/BlendFunc>
-#include <osg/PositionAttitudeTransform>
 #include <unordered_map>
 #include <algorithm>
 
@@ -56,14 +55,15 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
     auto planetRoot = InitPlanetDrawPipeline();
 
     // Get the phase 1 animation
-    auto animPath1 = CreateAnimationPhase1();
+    auto animPath1 = CreateAnimationPhase1(cvr::PluginHelper::getProgramDuration());
     // Create a node to move the things around.
-    auto xForm = new osg::PositionAttitudeTransform;
-    xForm->setUpdateCallback(new osg::AnimationPathCallback(animPath1));
-    mLastTransform->addChild(xForm);
+    mAnimationNode = new osg::PositionAttitudeTransform;
+    mAnimationNode->setUpdateCallback(new osg::AnimationPathCallback(animPath1));
+    mLastTransform->addChild(mAnimationNode);
 
-    xForm->addChild(planetRoot);
-    xForm->addChild(partSystemRoot);
+    mAnimationNode->addChild(planetRoot);
+    mAnimationNode->addChild(partSystemRoot);
+
     mPhase1Time = ConfigManager::getFloat(params::gPluginConfigPrefix + "Phase1.Fades.FadeInTime");
     mPhase2Time = ConfigManager::getFloat(params::gPluginConfigPrefix + "Phase2.Fades.FadeInTime");
     mPhase3Time = ConfigManager::getFloat(params::gPluginConfigPrefix + "Phase3.Fades.FadeInTime");
@@ -297,12 +297,19 @@ void OSGPlanet::PostFrame(float runningTime) {
         SetupPhase2ColorsAndFades();
         mPlanetGeode->getOrCreateStateSet()->removeAttribute(osg::StateAttribute::Type::PROGRAM);
         mPlanetGeode->getOrCreateStateSet()->setAttributeAndModes(mProgram2);
+
+        auto animCallback = dynamic_cast<osg::AnimationPathCallback *>(mAnimationNode->getUpdateCallback());
+        animCallback->setAnimationPath(CreateAnimationPhase2(runningTime));
         mPhase2Switch = true;
+
     } else if(runningTime >= mPhase3Time && !mPhase3Switch) {
         std::cerr << "Planet switching to phase 3" << std::endl;
         SetupPhase3ColorsAndFades();
         mPlanetGeode->getOrCreateStateSet()->removeAttribute(osg::StateAttribute::Type::PROGRAM);
         mPlanetGeode->getOrCreateStateSet()->setAttributeAndModes(mProgram3);
+
+        auto animCallback = dynamic_cast<osg::AnimationPathCallback *>(mAnimationNode->getUpdateCallback());
+        animCallback->setAnimationPath(CreateAnimationPhase3(runningTime));
         mPhase3Switch = true;
     }
 }
@@ -546,25 +553,56 @@ void OSGPlanet::SetupPhase3ColorsAndFades() {
  * Planet starts far away and we gradually get closer. Once it fills our vision, ...
  * @return
  */
-osg::AnimationPath * OSGPlanet::CreateAnimationPhase1() {
+osg::AnimationPath * OSGPlanet::CreateAnimationPhase1(float time) {
     auto path = new osg::AnimationPath;
     path->setLoopMode(osg::AnimationPath::NO_LOOPING);
 
-    auto numPoints = cvr::ConfigManager::getInt("value", params::gPluginConfigPrefix + "Phase1.AnimationPath.NumPoints", 0);
+    auto numPoints = cvr::ConfigManager::getInt("value",
+            params::gPluginConfigPrefix + "Phase1.AnimationPath.NumPoints", 0);
     for (int i = 1; i <= numPoints; ++i) {
         std::string tag = params::gPluginConfigPrefix + "Phase1.AnimationPath.Point" + std::to_string(i);
         auto point = cvr::ConfigManager::getVec4(tag);
         osg::AnimationPath::ControlPoint cp;
         cp.setPosition(osg::Vec3d(point.x(), point.y(), point.z()));
-        path->insert(point.w(), cp);
+        path->insert(point.w() + time, cp);
     }
 
     return path;
 }
 
-osg::AnimationPath * OSGPlanet::CreateAnimationPhase2() {}
+osg::AnimationPath * OSGPlanet::CreateAnimationPhase2(float time) {
+    auto path = new osg::AnimationPath;
+    path->setLoopMode(osg::AnimationPath::NO_LOOPING);
 
-osg::AnimationPath * OSGPlanet::CreateAnimationPhase3() {}
+    auto numPoints = cvr::ConfigManager::getInt("value",
+            params::gPluginConfigPrefix + "Phase2.AnimationPath.NumPoints", 0);
+    for (int i = 1; i <= numPoints; ++i) {
+        std::string tag = params::gPluginConfigPrefix + "Phase1.AnimationPath.Point" + std::to_string(i);
+        auto point = cvr::ConfigManager::getVec4(tag);
+        osg::AnimationPath::ControlPoint cp;
+        cp.setPosition(osg::Vec3d(point.x(), point.y(), point.z()));
+        path->insert(point.w() + time, cp);
+    }
+
+    return path;
+}
+
+osg::AnimationPath * OSGPlanet::CreateAnimationPhase3(float time) {
+    auto path = new osg::AnimationPath;
+    path->setLoopMode(osg::AnimationPath::NO_LOOPING);
+
+    auto numPoints = cvr::ConfigManager::getInt("value",
+            params::gPluginConfigPrefix + "Phase2.AnimationPath.NumPoints", 0);
+    for (int i = 1; i <= numPoints; ++i) {
+        std::string tag = params::gPluginConfigPrefix + "Phase1.AnimationPath.Point" + std::to_string(i);
+        auto point = cvr::ConfigManager::getVec4(tag);
+        osg::AnimationPath::ControlPoint cp;
+        cp.setPosition(osg::Vec3d(point.x(), point.y(), point.z()));
+        path->insert(point.w() + time, cp);
+    }
+
+    return path;
+}
 
 //int getestimatedMaxNumberOfParticles(osgParticle::ConstantRateCounter * counter, double lifetime) {
 //    int minNumParticles =  static_cast<int>(counter->getMinimumNumberOfParticlesToCreate() * 60.0f * lifetime);
