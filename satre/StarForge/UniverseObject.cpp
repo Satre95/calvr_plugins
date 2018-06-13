@@ -13,8 +13,9 @@
 
 namespace params {
 	glm::vec3 gPlanetCenter = glm::vec3(0.f);
-	float gPlanetRadius = 100.f;
+	float gPlanetRadius = 120.f;
 	std::string gPluginConfigPrefix = "Plugin.StarForge.";
+	oasclient::Sound * gAudioTrack = nullptr;
 };
 
 using namespace cvr;
@@ -22,6 +23,7 @@ using namespace cvr;
 UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, bool clip, bool contextMenu, bool showBounds) :
         SceneObject(name,navigation,movable,clip,contextMenu,showBounds)
 {
+    params::gAudioTrack = &mAudioTrack;
     setBoundsCalcMode(MANUAL);
     setBoundingBox(osg::BoundingBox(osg::Vec3(-1, -1, -1) * params::gPlanetRadius * 900.f, osg::Vec3(1, 1, 1) * params::gPlanetRadius * 200.f));
 
@@ -94,13 +96,13 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
 
     osgViewer::ViewerBase::Contexts contexts;
     cvr::CVRViewer::instance()->getContexts(contexts);
-    if(contexts.empty() == false) {
+    if(!contexts.empty()) {
         auto gl_state = contexts.front()->getState();
         gl_state->setUseModelViewAndProjectionUniforms(true);
         gl_state->setUseVertexAttributeAliasing(true);
     }
-
     SetupSound();
+
 //    osgUtil::Optimizer optimizer;
 //    optimizer.optimize(mPlanet->GetGraph());
 }
@@ -218,7 +220,7 @@ void UniverseObject::SetupSound() {
    std::cerr << "Sound path: " << mAssetsPath + soundFilepath << std::endl;
    mAudioTrack.initialize(mAssetsPath + soundFilepath);
    if(!mAudioTrack.isValid()) {
-       std::cerr << "ERROR: Unable to create sound specified by \'" << soundFilepath << "\'" << std::endl;
+       std::cerr << "ERROR: Unable to create sound specified by \'" << mAssetsPath + soundFilepath << "\'" << std::endl;
        return;
    }
 

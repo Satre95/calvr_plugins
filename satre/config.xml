@@ -52,18 +52,35 @@
 		<ShadersPath value="/home/satre/Developer/CVRPlugins/satre/StarForge/shaders/" />
 		<UniversePosition x="0" y="0" z="0" />
 		<OAS ip="127.0.0.1" port="31231" />
-		<AudioTrack file="../../Dropbox/StarForge Planet/final1Mono.wav" gain="1.f"/>
+		<AudioTrack file="sounds/AudioTrack.wav" gain="1.f"/>
 
 		<AnimationPath>
-			<NumPoints value="6" />
-			<Point1 x="0" y="1500" z="0.0" w="0"/>
-			<Point2 x="0" y="-390" z="0" w="35" /> <!-- Corresponds to end of phase 1 -->
+			<NumPoints value="15" />
+			<Point1 x="0" y="0" z="0.0" w="0"/>
+			<Point2 x="0" y="-250" z="0" w="5" /> 
 
-			<Point3 x="0" y="-390" z="-100" w="45"/>
-			<Point4 x="0" y="-390" z="-100" w="68" /> <!-- Corresponds to end of phase 2 -->
+			<Point3 x="-176.77" y="-323.22" z="0" w="10" /> 
+			<Point4 x="-250" y="-500" z="0" w="15" />
+
+			<Point5 x="-176.77" y="-676.77" z="0" w="20" />
+			<Point6 x="0" y="-750" z="0" w="25" /> 
+
+			<Point7 x="176.77" y="-676.77" z="0" w="30" />
+			<Point8 x="250" y="-500" z="0" w="35" />
 			
-			<Point5 x="0" y="-500" z="0" w="71"/>
-			<Point6 x="0" y="-500" z="0" w="209"/> <!-- Corresponds to end of phase 3 -->
+			<Point9 x="176.77" y="-323.22" z="0" w="40" />
+			<Point10 x="0" y="-250" z="0" w="45" />
+			<Point11 x="0" y="-390" z="-100" w="45.1" />
+
+			 <!-- Corresponds to end of phase 1 -->
+
+			<Point12 x="0" y="-390" z="-100" w="45.1"/>
+			<Point13 x="0" y="-390" z="-100" w="68" /> 
+			<!-- Corresponds to end of phase 2 -->
+			
+			<Point14 x="0" y="-500" z="0" w="71"/>
+			<Point15 x="0" y="-500" z="0" w="209"/> 
+			<!-- Corresponds to end of phase 3 -->
 		</AnimationPath>
 
 		<Phase1>

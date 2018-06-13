@@ -6,6 +6,8 @@
 #include "math_helper.hpp"
 #include "SpherePlacer.hpp"
 #include "PositionCorrectionOperator.hpp"
+#include "SoundSourceUpdateCallback.hpp"
+
 #include <osg/Geometry>
 #include <osg/Geode>
 #include <osg/Point>
@@ -57,7 +59,9 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
     auto animPath = LoadAnimationPath(cvr::PluginHelper::getProgramDuration());
     // Create a node to move the things around.
     mAnimationNode = new osg::PositionAttitudeTransform;
-    mAnimationNode->setUpdateCallback(new osg::AnimationPathCallback(animPath));
+    auto animCallback = new osg::AnimationPathCallback(animPath);
+    mAnimationNode->setUpdateCallback(animCallback);
+    animCallback->addNestedCallback(new SoundSourceUpdateCallback(params::gAudioTrack));
     mLastTransform->addChild(mAnimationNode);
 
     mAnimationNode->addChild(planetRoot);

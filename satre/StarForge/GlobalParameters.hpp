@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/vec3.hpp>
 #include <string>
+#include <OAS/OASClient.h>
 /// Global parameters controlling the simulation.
 
 namespace params {
@@ -11,4 +12,6 @@ namespace params {
 	extern float gPlanetRadius;
 
 	extern std::string gPluginConfigPrefix;
+
+	extern oasclient::Sound * gAudioTrack;
 };
