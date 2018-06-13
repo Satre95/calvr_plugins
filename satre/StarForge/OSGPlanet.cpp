@@ -38,8 +38,8 @@
 
 using namespace cvr;
 
-osg::Image * CreateImage(int width, int height, int numComponents);
-osg::Texture2D * CreateTexture(int width, int height, int numComponents);
+osg::ref_ptr<osg::Image>  CreateImage(int width, int height, int numComponents);
+osg::ref_ptr<osg::Texture2D> CreateTexture(int width, int height, int numComponents);
 void ClearImage(osg::Image * image);
 std::pair<float, float> GetTextureCoordsofParticle(osgParticle::Particle * particle);
 
@@ -72,10 +72,10 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 
 OSGPlanet::~OSGPlanet() = default;
 
-osg::Group* OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir, bool drawSystem) {
+osg::ref_ptr<osg::Group> OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttractors, std::string & assetsDir, bool drawSystem) {
 
     auto shadersPath = cvr::ConfigManager::getEntry("value", params::gPluginConfigPrefix + "ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
-    auto systemRoot = new osg::Group;
+    osg::ref_ptr<osg::Group> systemRoot = new osg::Group;
 
     /// Init the particle system
     mSystem = new osgParticle::ParticleSystem;
@@ -189,8 +189,8 @@ osg::Group* OSGPlanet::InitParticleSystem(size_t numRepulsors, size_t numAttract
     return systemRoot;
 }
 
-osg::Group* OSGPlanet::InitPlanetDrawPipeline() {
-    auto planetRoot = new osg::Group;
+osg::ref_ptr<osg::Group> OSGPlanet::InitPlanetDrawPipeline() {
+    osg::ref_ptr<osg::Group> planetRoot = new osg::Group;
 
     // Create the sphere
     mPlanetSphere = new osg::ShapeDrawable(
@@ -440,7 +440,7 @@ void OSGPlanet::UpdateAgeVelDataTexture() {
     image->dirty();
 }
 
-osg::Program * OSGPlanet::LoadProgramForPhase(int phase) {
+osg::ref_ptr<osg::Program> OSGPlanet::LoadProgramForPhase(int phase) {
     // Load the shaders
     auto shadersPath = cvr::ConfigManager::getEntry("value", params::gPluginConfigPrefix + "ShadersPath", "/home/satre/CVRPlugins/satre/StarForge/shaders/");
     auto vertexShader = osg::Shader::readShaderFile(osg::Shader::VERTEX,
@@ -458,7 +458,7 @@ osg::Program * OSGPlanet::LoadProgramForPhase(int phase) {
     }
 
     // Setup the programmable pipeline
-    auto drawProgram = new osg::Program;
+    osg::ref_ptr<osg::Program> drawProgram = new osg::Program;
     drawProgram->addShader(vertexShader);
     drawProgram->addShader(fragShader);
 
@@ -546,8 +546,8 @@ void OSGPlanet::SetupPhase3ColorsAndFades() {
  * Planet starts far away and we gradually get closer. Once it fills our vision, ...
  * @return
  */
-osg::AnimationPath * OSGPlanet::LoadAnimationPath(float time) {
-    auto path = new osg::AnimationPath;
+osg::ref_ptr<osg::AnimationPath> OSGPlanet::LoadAnimationPath(float time) {
+    osg::ref_ptr<osg::AnimationPath> path = new osg::AnimationPath;
     path->setLoopMode(osg::AnimationPath::NO_LOOPING);
 
     auto numPoints = cvr::ConfigManager::getInt("value",
@@ -563,7 +563,7 @@ osg::AnimationPath * OSGPlanet::LoadAnimationPath(float time) {
     return path;
 }
 
-osg::Image * CreateImage(int width, int height, int numComponents) {
+osg::ref_ptr<osg::Image> CreateImage(int width, int height, int numComponents) {
     GLenum pixelFormat;
     switch (numComponents) {
         case 1: pixelFormat = GL_R; break;
@@ -572,7 +572,7 @@ osg::Image * CreateImage(int width, int height, int numComponents) {
         default: pixelFormat = GL_RGBA; break;
     }
 
-    auto image = new osg::Image;
+    osg::ref_ptr<osg::Image> image = new osg::Image;
     image->allocateImage(width, width, 1, pixelFormat, GL_FLOAT);
     auto data = reinterpret_cast<float *>(image->data());
     // zero fill image
@@ -589,7 +589,7 @@ osg::Image * CreateImage(int width, int height, int numComponents) {
     return image;
 }
 
-osg::Texture2D * CreateTexture(int width, int height, int numComponents) {
+osg::ref_ptr<osg::Texture2D> CreateTexture(int width, int height, int numComponents) {
     GLint  internalFormat;
     switch (numComponents) {
         case 1: internalFormat = GL_R32F;
@@ -604,7 +604,7 @@ osg::Texture2D * CreateTexture(int width, int height, int numComponents) {
         default:internalFormat = GL_RGBA32F;
             break;
     }
-    auto tex = new osg::Texture2D;
+    osg::ref_ptr<osg::Texture2D> tex = new osg::Texture2D;
     tex->setResizeNonPowerOfTwoHint(false);
     tex->setDataVariance(osg::Object::DYNAMIC);
     tex->setTextureSize(width, height);

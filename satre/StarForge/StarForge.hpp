@@ -5,7 +5,7 @@
 
 
 #include "UniverseObject.hpp"
-
+#include <memory>
 class StarForge: public cvr::CVRPlugin {
 public:
 
@@ -19,7 +19,7 @@ public:
 	virtual int getPriority() override { return 100; }
 
 protected:
-	UniverseObject * mUniverse = nullptr;
+	std::unique_ptr<UniverseObject> mUniverse;
 
 	bool mFirstPreframeCall = true;
 	double mStartTime = 0.0;

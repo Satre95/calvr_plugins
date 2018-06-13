@@ -13,20 +13,22 @@ StarForge::StarForge() {
 }
 
 StarForge::~StarForge() {
-	delete mUniverse;
+    mUniverse->detachFromScene();
+    PluginHelper::unregisterSceneObject(mUniverse.get());
+
 }
 
 bool StarForge::init() {
 
 	std::cout << "Star Forge Init" << std::endl;
-	mUniverse = new UniverseObject("Star Forge", true, true, false, true, true);
+	mUniverse = std::make_unique<UniverseObject>("Star Forge", true, true, false, true, true);
 
-	PluginHelper::registerSceneObject(mUniverse, "Star Forge");
+	PluginHelper::registerSceneObject(mUniverse.get(), "Star Forge");
     mUniverse->attachToScene();
     mUniverse->setNavigationOn(true);
     mUniverse->setMovable(false);
     mUniverse->setShowBounds(false);
-    auto pos = ConfigManager::getVec3("x", "y", "z", "Plugin.StarForge.UniversePosition", osg::Vec3(0, -1000, 0));
+    auto pos = ConfigManager::getVec3("Plugin.StarForge.UniversePosition", osg::Vec3(0, -1000, 0));
     mUniverse->setPosition(pos);
 
     std::cout << "Star Forge Init finished" << std::endl;

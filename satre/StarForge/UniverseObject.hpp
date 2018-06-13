@@ -11,6 +11,7 @@
 #include <cvrMenu/MenuText.h>
 #include <OAS/OASClient.h>
 #include <vector>
+#include <memory>
 #include "SkyBox.hpp"
 
 
@@ -39,10 +40,10 @@ protected:
     float mScale = 1.0f;
 
 
-    OSGPlanet * mPlanet = nullptr;
+    std::unique_ptr<OSGPlanet> mPlanet;
     std::vector<osg::ref_ptr<SkyBox >> mSkyboxes;
-    SkyBox * mCurrSkybox;
-    osg::MatrixTransform * mUniverseTransform = nullptr;
+    osg::ref_ptr<SkyBox> mCurrSkybox;
+    osg::ref_ptr<osg::MatrixTransform> mUniverseTransform = nullptr;
     oasclient::Sound mAudioTrack;
     std::string mAssetsPath;
 

@@ -23,7 +23,7 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
         SceneObject(name,navigation,movable,clip,contextMenu,showBounds)
 {
     setBoundsCalcMode(MANUAL);
-    setBoundingBox(osg::BoundingBox(osg::Vec3(-1, -1, -1) * params::gPlanetRadius * 400.f, osg::Vec3(1, 1, 1) * params::gPlanetRadius * 200.f));
+    setBoundingBox(osg::BoundingBox(osg::Vec3(-1, -1, -1) * params::gPlanetRadius * 900.f, osg::Vec3(1, 1, 1) * params::gPlanetRadius * 200.f));
 
     if (contextMenu) {
         mScaleRangeSlider = new MenuRangeValue("Scale", 0.1, 100, 1.0);
@@ -58,9 +58,9 @@ UniverseObject::UniverseObject(std::string name, bool navigation, bool movable, 
 
     mAssetsPath = ConfigManager::getEntry("value", params::gPluginConfigPrefix + "AssetsPath",
                                                      "/home/satre/Developer/data/plugins/StarForge/");
-    mPlanet = new OSGPlanet(numRepulsors, numAttractors, mAssetsPath);
+    mPlanet = std::make_unique<OSGPlanet>(numRepulsors, numAttractors, mAssetsPath);
 
-//    mSkyboxes.reserve(3);
+    mSkyboxes.reserve(3);
     mSkyboxes.push_back(new SkyBox(1, getOrComputeBoundingBox().radius()));
     mSkyboxes.push_back(new SkyBox(2, getOrComputeBoundingBox().radius()));
     mSkyboxes.push_back(new SkyBox(3, getOrComputeBoundingBox().radius()));
@@ -110,7 +110,6 @@ UniverseObject::~UniverseObject()
 	delete mScaleRangeSlider;
 	delete mGaussianSigmaRangeSlider;
 	delete mRotationRateRangeSlider;
-	delete mPlanet;
     delete mFrameTimeItem;
     delete mNumParticlesItem;
     mAudioTrack.stop();
