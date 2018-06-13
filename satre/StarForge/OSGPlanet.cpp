@@ -40,7 +40,7 @@ using namespace cvr;
 
 osg::ref_ptr<osg::Image>  CreateImage(int width, int height, int numComponents);
 osg::ref_ptr<osg::Texture2D> CreateTexture(int width, int height, int numComponents);
-void ClearImage(osg::Image * image);
+void ClearImage(osg::ref_ptr<osg::Image> image);
 std::pair<float, float> GetTextureCoordsofParticle(osgParticle::Particle * particle);
 
 OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & assetsDir) : mAssetsDir(assetsDir){
@@ -618,7 +618,7 @@ osg::ref_ptr<osg::Texture2D> CreateTexture(int width, int height, int numCompone
     return tex;
 }
 
-void ClearImage(osg::Image * image) {
+void ClearImage(osg::ref_ptr<osg::Image> image) {
     auto sizeInBytes = image->getTotalSizeInBytes();
     std::memset(image->data(), 0, sizeInBytes);
 }
