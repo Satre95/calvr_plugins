@@ -86,11 +86,12 @@ float Gaussian(float u, float sigma) {
 }
 
 void FadeIn(inout vec4 colorIn) {
-	colorIn.xyz = mix(vec3(0.f), colorIn.xyz, min((u_time - u_fadeInTime) / u_fadeInDuration, 1.f));
+	float t = clamp((u_time - u_fadeInTime) / u_fadeInDuration, 0.f, 1.f);
+	colorIn.xyz = mix(vec3(0.f), colorIn.xyz, t);
 }
 
 void FadeOut(inout vec4 colorIn) {
-	float t = max((u_time - u_fadeOutTime) / u_fadeOutDuration, 0.f);
+	float t = clamp((u_time - u_fadeOutTime) / u_fadeOutDuration, 0.f, 1.f);
 	colorIn.xyz = mix(colorIn.xyz, vec3(0.f), t);
 }
 

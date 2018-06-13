@@ -148,21 +148,6 @@ void UniverseObject::setScale(float scale) {
 
 void UniverseObject::PreFrame(float runningTime) {
     mPlanet->PreFrame(runningTime);
-
-    if(runningTime >= mPhase2Time && !mPhase2Switch) {
-        std::cout << "Switching to phase 2" << std::endl;
-        mUniverseTransform->removeChild(mCurrSkybox);
-        mCurrSkybox = mSkyboxes.at(1);
-        mUniverseTransform->addChild(mCurrSkybox);
-        mPhase2Switch = true;
-    } else if(runningTime >= mPhase3Time && !mPhase3Switch) {
-        std::cout << "Switching to phase 3" << std::endl;
-        mUniverseTransform->removeChild(mCurrSkybox);
-        mCurrSkybox = mSkyboxes.at(2);
-        mUniverseTransform->addChild(mCurrSkybox);
-        mPhase3Switch = true;
-    }
-
     mCurrSkybox->PreFrame(runningTime);
 }
 
@@ -179,6 +164,20 @@ void UniverseObject::PostFrame(float runningTime) {
         ss << "Number of particles: " << mPlanet->GetNumParticles();
         mNumParticlesItem->setText(ss.str());
 
+    }
+
+    if(runningTime >= mPhase2Time && !mPhase2Switch) {
+        std::cout << "Skybox switching to phase 2" << std::endl;
+        mUniverseTransform->removeChild(mCurrSkybox);
+        mCurrSkybox = mSkyboxes.at(1);
+        mUniverseTransform->addChild(mCurrSkybox);
+        mPhase2Switch = true;
+    } else if(runningTime >= mPhase3Time && !mPhase3Switch) {
+        std::cout << "Skybox switching to phase 3" << std::endl;
+        mUniverseTransform->removeChild(mCurrSkybox);
+        mCurrSkybox = mSkyboxes.at(2);
+        mUniverseTransform->addChild(mCurrSkybox);
+        mPhase3Switch = true;
     }
 }
 /*

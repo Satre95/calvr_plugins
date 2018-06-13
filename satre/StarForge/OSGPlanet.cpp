@@ -64,6 +64,9 @@ OSGPlanet::OSGPlanet(size_t numRepulsors, size_t numAttractors, std::string & as
 
     xForm->addChild(planetRoot);
     xForm->addChild(partSystemRoot);
+    mPhase1Time = ConfigManager::getFloat(params::gPluginConfigPrefix + "Phase1.Fades.FadeInTime");
+    mPhase2Time = ConfigManager::getFloat(params::gPluginConfigPrefix + "Phase2.Fades.FadeInTime");
+    mPhase3Time = ConfigManager::getFloat(params::gPluginConfigPrefix + "Phase3.Fades.FadeInTime");
 
 
 }
@@ -228,21 +231,6 @@ osg::Group* OSGPlanet::InitPlanetDrawPipeline() {
     stateset->addUniform(mUTime);
     mUTime->set(0.f);
 
-    // Get the fade in out time from the config
-    float fadeInDuration = cvr::ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeInDuration");
-    auto uFadeInDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeInDuration");
-    stateset->addUniform(uFadeInDuration);
-    uFadeInDuration->set(fadeInDuration);
-
-    float fadeOutTime = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeOutTime", 42.f);
-    auto uFadeOutTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutTime");
-    stateset->addUniform(uFadeOutTime);
-    uFadeOutTime->set(fadeOutTime);
-
-    float fadeOutDuration = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeOutDuration", 3.f);
-    auto uFadeOutDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutDuration");
-    stateset->addUniform(uFadeOutDuration);
-    uFadeOutDuration->set(fadeOutDuration);
     int texSize = int(std::ceil(std::sqrt(counter->getEstimatedMaxNumOfParticles(mParticleLifeTime)))) + 1; // Err on the side of caution
     std::cerr << "Initializing textures with width " << texSize << std::endl;
     {
@@ -279,10 +267,9 @@ osg::Group* OSGPlanet::InitPlanetDrawPipeline() {
     mProgram2 = LoadProgramForPhase(2);
     mProgram3 = LoadProgramForPhase(3);
 
-    SetupPhase1Colors(geode);
-
-    // Start with phase 1.
+    SetupPhase1ColorsAndFades();
     stateset->setAttribute(mProgram1);
+    stateset->setDataVariance(osg::Object::DataVariance::DYNAMIC);
 
     // Add it to the scene graph
     planetRoot->addChild(geode);
@@ -299,12 +286,26 @@ void OSGPlanet::PreFrame(float runningTime) {
     mUTime->set(float(runningTime));
 
 //    UpdatePositionDataTexture();
-//    UpdateColorDataTexture();
+    UpdateColorDataTexture();
 //    UpdateAgeVelDataTexture();
 }
 
 
-void OSGPlanet::PostFrame(float runningTime) {}
+void OSGPlanet::PostFrame(float runningTime) {
+    if(runningTime >= mPhase2Time && !mPhase2Switch) {
+        std::cerr << "Planet switching to phase 2" << std::endl;
+        SetupPhase2ColorsAndFades();
+        mPlanetGeode->getOrCreateStateSet()->removeAttribute(osg::StateAttribute::Type::PROGRAM);
+        mPlanetGeode->getOrCreateStateSet()->setAttributeAndModes(mProgram2);
+        mPhase2Switch = true;
+    } else if(runningTime >= mPhase3Time && !mPhase3Switch) {
+        std::cerr << "Planet switching to phase 3" << std::endl;
+        SetupPhase3ColorsAndFades();
+        mPlanetGeode->getOrCreateStateSet()->removeAttribute(osg::StateAttribute::Type::PROGRAM);
+        mPlanetGeode->getOrCreateStateSet()->setAttributeAndModes(mProgram3);
+        mPhase3Switch = true;
+    }
+}
 
 void OSGPlanet::UpdatePositionDataTexture() {
     auto image = mPositionTexture->getImage();
@@ -464,34 +465,81 @@ osg::Program * OSGPlanet::LoadProgramForPhase(int phase) {
     return drawProgram;
 }
 
-void OSGPlanet::SetupPhase1Colors(osg::Geode * geode) {
+void OSGPlanet::SetupPhase1ColorsAndFades() {
+    auto stateset = mPlanetGeode->getOrCreateStateSet();
     // Setup the colors for this phase
-    auto uni = geode->getOrCreateStateSet()->getUniform("u_colors");
+    auto uni = stateset->getUniform("u_colors");
     auto numColors = ConfigManager::getInt("value", params::gPluginConfigPrefix + "Phase1.Colors.NumColors", 0);
-    for (int i = 1; i <= numColors; ++i) {
+    for (unsigned int i = 1; i <= numColors; ++i) {
         auto color = ConfigManager::getVec3(params::gPluginConfigPrefix + "Phase1.Colors.Color" + std::to_string(i));
         uni->setElement(i - 1, color);
     }
+
+    // Setup the fade in and out times for this phase
+    float fadeInDuration = cvr::ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeInDuration");
+    auto uFadeInDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeInDuration");
+    stateset->addUniform(uFadeInDuration);
+    uFadeInDuration->set(fadeInDuration);
+
+    float fadeOutTime = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeOutTime", 42.f);
+    auto uFadeOutTime = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutTime");
+    stateset->addUniform(uFadeOutTime);
+    uFadeOutTime->set(fadeOutTime);
+
+    float fadeOutDuration = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase1.Fades.FadeOutDuration", 3.f);
+    auto uFadeOutDuration = new osg::Uniform(osg::Uniform::Type::FLOAT, "u_fadeOutDuration");
+    stateset->addUniform(uFadeOutDuration);
+    uFadeOutDuration->set(fadeOutDuration);
+
 }
 
-void OSGPlanet::SetupPhase2Colors(osg::Geode * geode) {
+void OSGPlanet::SetupPhase2ColorsAndFades() {
+    auto stateset = mPlanetGeode->getOrCreateStateSet();
     // Setup the colors for this phase
-    auto uni = geode->getOrCreateStateSet()->getUniform("u_colors");
+    auto uni = stateset->getUniform("u_colors");
     auto numColors = ConfigManager::getInt("value", params::gPluginConfigPrefix + "Phase2.Colors.NumColors", 0);
-    for (int i = 1; i <= numColors; ++i) {
-        auto color = ConfigManager::getVec3(params::gPluginConfigPrefix + "Phase2.Colors.Color" + std::to_string(i));
+    for (unsigned int i = 1; i <= numColors; ++i) {
+        osg::Vec3 color = ConfigManager::getVec3(params::gPluginConfigPrefix + "Phase2.Colors.Color" + std::to_string(i));
         uni->setElement(i - 1, color);
     }
+
+    // Setup the fade in and out times for this phase
+    float fadeInDuration = cvr::ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase2.Fades.FadeInDuration");
+    auto uFadeInDuration = stateset->getUniform("u_fadeInDuration");
+    uFadeInDuration->set(fadeInDuration);
+
+    float fadeOutTime = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase2.Fades.FadeOutTime", 42.f);
+    auto uFadeOutTime = stateset->getUniform("u_fadeOutTime");
+    uFadeOutTime->set(fadeOutTime);
+
+    float fadeOutDuration = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase2.Fades.FadeOutDuration", 3.f);
+    auto uFadeOutDuration = stateset->getUniform("u_fadeOutDuration");
+    uFadeOutDuration->set(fadeOutDuration);
 }
 
-void OSGPlanet::SetupPhase3Colors(osg::Geode * geode) {
+void OSGPlanet::SetupPhase3ColorsAndFades() {
+    auto stateset = mPlanetGeode->getOrCreateStateSet();
     // Setup the colors for this phase
+    auto uni = stateset->getUniform("u_colors");
     auto numColors = ConfigManager::getInt("value", params::gPluginConfigPrefix + "Phase3.Colors.NumColors", 0);
-    auto uni = geode->getOrCreateStateSet()->getUniform("u_colors");
-    for (int i = 1; i <= numColors; ++i) {
+    std::cout << "Setting " << numColors << " colors for phase 3" << std::endl;
+    for (unsigned  int i = 1; i <= numColors; ++i) {
         auto color = ConfigManager::getVec3(params::gPluginConfigPrefix + "Phase3.Colors.Color" + std::to_string(i));
         uni->setElement(i - 1, color);
     }
+
+    // Setup the fade in and out times for this phase
+    float fadeInDuration = cvr::ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase3.Fades.FadeInDuration");
+    auto uFadeInDuration = stateset->getUniform("u_fadeInDuration");
+    uFadeInDuration->set(fadeInDuration);
+
+    float fadeOutTime = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase3.Fades.FadeOutTime", 42.f);
+    auto uFadeOutTime = stateset->getUniform("u_fadeOutTime");
+    uFadeOutTime->set(fadeOutTime);
+
+    float fadeOutDuration = ConfigManager::getFloat("value", params::gPluginConfigPrefix + "Phase3.Fades.FadeOutDuration", 3.f);
+    auto uFadeOutDuration = stateset->getUniform("u_fadeOutDuration");
+    uFadeOutDuration->set(fadeOutDuration);
 }
 
 /**

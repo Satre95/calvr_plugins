@@ -34,9 +34,9 @@ private:
 
     osg::Program * LoadProgramForPhase(int phase);
 
-    void SetupPhase1Colors(osg::Geode * geode);
-    void SetupPhase2Colors(osg::Geode * geode);
-    void SetupPhase3Colors(osg::Geode * geode);
+    void SetupPhase1ColorsAndFades();
+    void SetupPhase2ColorsAndFades();
+    void SetupPhase3ColorsAndFades();
 
 
 //    void CleanupPhase1(osg::Geode * geode);
@@ -79,4 +79,8 @@ private:
     float mRotationRate = 0.1f;
 
     osg::Program * mProgram1, *mProgram2, *mProgram3;
+
+    bool mPhase2Switch = false, mPhase3Switch = false;
+    float mPhase1Time, mPhase2Time, mPhase3Time;
+
 };
