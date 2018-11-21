@@ -4,12 +4,13 @@ SET(PLUGIN_HEADERS
 )
 
 ADD_LIBRARY(${LIB_NAME}
-    "SHARED"
+    STATIC
     ${PLUGIN_HEADERS}
     SpatialViz.cpp
 )
 
 add_definitions(-DNDEBUG)
+add_definitions(-DHAVE_PHYSX)
 
 FIND_PACKAGE(PhysX)
 

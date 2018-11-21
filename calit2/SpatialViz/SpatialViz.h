@@ -31,7 +31,7 @@
 #include <osgDB/FileUtils>
 
 #include <osg/PositionAttitudeTransform> 	// the transform of objects 
-#include <GL/freeglut.h>                    // testing - PhysX3
+
 
 // PhysX:
 #include <PxPhysicsAPI.h>
@@ -47,32 +47,33 @@
 class SpatialViz : public cvr::CVRPlugin, public cvr::MenuCallback
 {
   protected:
-    // menu variables
+    // menu and CVR variables
     cvr::SubMenu *_mainMenu;
     cvr::MenuButton *_mazePuzzleButton, *_5x5puzzleButton, *_tetrisPuzzle2, *_labyrinthPuzzle, *_tetrisPuzzle, *_removePuzzles, *_restartPhysics;
-    
+    cvr::MenuCheckbox * _rotate5x5Menu, *_rotateMazeMenu, *_rotateLabMenu, *_rotateMainTetrisMenu, *_rotateMainTetris2Menu;
     cvr::SceneObject *soLab, *so5x5, *soMaze, *soTetris, *soMainTetris, *soTetris2, *soMainTetris2;
     
     osg::PositionAttitudeTransform *_sphereTrans, *_cubeTrans;
     osg::Geode *_cubeGeode, *_sphereGeode;
-    
-    osg::Switch *_root, *_labyrinthSwitch, *_5x5Switch, *_mazeSwitch, *_tetrisSwitch, *_mainTetrisSwitch, *_tetrisSwitch2, *_mainTetrisSwitch2;
+    osg::Switch *_root, *_labyrinthSwitch, *_5x5Switch, *_mazeSwitch, *_tetrisSwitch, *_mainTetrisSwitch, *_tetrisSwitch2, *_mainTetrisSwitch2, *_testSwitch;
     
     // Puzzle variables
-    osg::PositionAttitudeTransform * _puzzleMaze, *_mazeBox, *_puzzle5x5, * _piecePuzzle1, * _piecePuzzle2, * _piecePuzzle3, * _piecePuzzle4, * _piecePuzzle5;
+    osg::PositionAttitudeTransform * _puzzleMazeTrans, *_puzzle5x5Trans, *_labTrans, *_mainTetrisPieceTrans, *_mainTetris2PieceTrans;    // used to rotate the entire puzzle
+    osg::PositionAttitudeTransform  *_mazeBox, * _piecePuzzle1, * _piecePuzzle2, * _piecePuzzle3, * _piecePuzzle4, * _piecePuzzle5;
     osg::Group * _puzzleMazeGroup, *_puzzle5x5Group, *_piecePuzzleGroup, *_labyrinthGroup;
-    osg::Group * _objGroup, *_objGroupMaze, *_objGroupTetris, *_TetrisPiece, *_mainTetris, *_TetrisPiece2, *_mainTetris2;
-    
+    osg::Group * _objGroup5x5, *_objGroupMaze, *_objGroupTetris, *_TetrisPiece, *_mainTetris, *_TetrisPiece2, *_mainTetris2;
     
     physx::PxSceneDesc* _sceneDesc;
     
-    // functions
-    osg::PositionAttitudeTransform *loadOBJ(osg::Group *, std::string, osg::Vec3, osg::Vec3, float);
-    
+    // osg helper functions
     void setNodeTransparency(osg::Node*, float);
-    osg::Texture2D * loadTexture(std::string);
     osg::PositionAttitudeTransform  * addSphere(osg::Group*, osg::Vec3, float, osg::Vec3);
     osg::PositionAttitudeTransform  * addCube(osg::Group*, osg::Vec3, float, float, float, osg::Vec3);
+    
+    // PhysX helper functions
+    void updateGravity(osg::Quat, physx::PxScene *);
+    osg::Vec2 checkTetris_matching(osg::Quat);
+    osg::Vec2 checkTetris2_matching(osg::Quat);
  
   public:
     SpatialViz();
@@ -80,10 +81,11 @@ class SpatialViz : public cvr::CVRPlugin, public cvr::MenuCallback
     
     bool init();
     void menuCallback(cvr::MenuItem * item);
+    void resetSceneManager();
     void preFrame();
     
     // PhysX 
-    void initPhysX();
+    bool initPhysX();
     void restartPhysics();
     
     // puzzles
@@ -92,12 +94,14 @@ class SpatialViz : public cvr::CVRPlugin, public cvr::MenuCallback
     void createPuzzleCube(int);
     void create5x5(int);
     void createLabyrinth(float, float);
-    
-    void createBoxes(int, physx::PxVec3, physx::PxVec3, bool, osg::Group*, std::vector<osg::PositionAttitudeTransform*>*, std::vector<physx::PxRigidDynamic*>*, std::vector<osg::Vec3>*, std::vector<physx::PxVec3>*, physx::PxQuat quat = physx::PxQuat::createIdentity());
-    void createSpheres(int, physx::PxVec3, float, osg::Group*, std::vector<osg::PositionAttitudeTransform*>*, std::vector<physx::PxRigidDynamic*>*, std::vector<osg::Vec3>*, std::vector<physx::PxVec3>*);
-    bool advance(physx::PxReal);
 
-    
+#if(__ANDROID__)// NOTE CHANGED DIRECTION OF ALL THESE INEQUALITIES
+    // createIdentity() and createZero() are deprecated since 3.3
+    void createBoxes(physx::PxVec3, physx::PxVec3, osg::Group*, std::vector<osg::PositionAttitudeTransform*>*, std::vector<physx::PxRigidDynamic*>*, std::vector<osg::Vec3>*, std::vector<physx::PxVec3>*, physx::PxQuat quat = physx::PxQuat(physx::PxIDENTITY()));
+#else
+    void createBoxes(physx::PxVec3, physx::PxVec3, osg::Group*, std::vector<osg::PositionAttitudeTransform*>*, std::vector<physx::PxRigidDynamic*>*, std::vector<osg::Vec3>*, std::vector<physx::PxVec3>*, physx::PxQuat quat = physx::PxQuat::createIdentity());
+#endif
+    void createSpheres(physx::PxVec3, float, osg::Group*, std::vector<osg::PositionAttitudeTransform*>*, std::vector<physx::PxRigidDynamic*>*, std::vector<osg::Vec3>*, std::vector<physx::PxVec3>*);
 };
 
 #endif
