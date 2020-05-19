@@ -29,14 +29,13 @@
 #include <osg/Uniform>
 #include <osgDB/ReadFile>
 #include <osgDB/FileUtils>
-
-#include "pointDrawable.h"
-#include "planeDrawable.h"
-#include "strokeDrawable.h"
+//self
+#include "basicDrawables/basisRenderer.h"
 
 typedef struct IntersetctObj{
     osg::Uniform * uTexture;
     osg::MatrixTransform * matrixTrans;
+    osg::Uniform * modelMatUniform;
 }isectObj;
 enum sceneState{
     FREE = 0,
@@ -45,31 +44,55 @@ enum sceneState{
 };
 enum LightingType{
     ARCORE_CORRECTION = 0,
-    SPHERICAL_HARMONICS,
-    ONES_SOURCE
+    ONES_SOURCE,
+    SPHERICAL_HARMONICS
+
 };
 class GlesDrawables : public cvr::CVRPlugin, public cvr::MenuCallback
 {
 typedef osg::ref_ptr<osg::MatrixTransform> Transform;
+enum cbTypes{
+    CB_POINT = 0,
+    CB_PLANE,
+    CB_LIGHT
+};
+private:
+    std::unordered_map<int, bool> cb_map = {{CB_POINT, true}, {CB_PLANE, true}, {CB_LIGHT, true}, {CB_LIGHT+1, false}, {CB_LIGHT+2, false}};
+    void update_objects();
+
 protected:
     cvr::SubMenu *_mainMenu;
-    cvr::MenuButton *_pointButton, *_planeButton, *_strokeButton;
+
+//    cvr::MenuCheckbox *_pointButton, *_planeButton, *_quadButton;
+//    cvr::MenuCheckbox* _obj1Button, *_obj2Button, *_obj3Button, *_lightButton;
+    cvr::MenuButton * _resetButton, *_restartButton;
+    std::vector<cvr::MenuCheckbox*> _vCheckBox;
+
     osg::Group *_root, *_objects;
     cvr::SceneObject *rootSO, *objSO;
 
-    osg::ref_ptr<pointDrawable> _pointcloudDrawable;
-    int _plane_num = 0, _objNum = 0;
-    std::vector<planeDrawable*> _planeDrawables;
-    osg::ref_ptr<strokeDrawable> _strokeDrawable;
+    basisRender* basis_renderer = nullptr;
+
     std::unordered_map<osg::Node*, isectObj> _map;
     osg::Node* _selectedNode = nullptr;
     sceneState _selectState = FREE;
     osg::Vec2f _mPreviousPos;
 
+    //_add_light=false;
+    int last_object_select = 1;
+    int _objNum = 0;
+
+
     void initMenuButtons();
     void createObject(osg::Group *, const char*, const char*, osg::Matrixf, LightingType);
     void createObject(osg::Group *, const char*, const char*, osg::Matrixf, bool opengl);
     bool tackleHitted(osgUtil::LineSegmentIntersector::Intersection result );
+
+    bool check_obj_selection(osg::Vec2f touchPos);
+    bool translate_obj(osg::Vec2f touchPos);
+    bool rotate_obj(osg::Vec2f touchPos);
+
+    void reset_scene();
 public:
     bool init();
     void menuCallback(cvr::MenuItem * item);
